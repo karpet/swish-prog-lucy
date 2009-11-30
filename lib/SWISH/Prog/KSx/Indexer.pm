@@ -139,6 +139,9 @@ in order to avoid spurious memory warnings during Perl's garbage collection.
 sub finish {
     my $self = shift;
 
+    # commit our changes
+    $self->{ks}->commit();
+
     # write header
     my $index = $self->{s3}->config->get_index;
 

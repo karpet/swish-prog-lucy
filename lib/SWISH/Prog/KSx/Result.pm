@@ -1,44 +1,48 @@
-package SWISH::Prog::KSx;
+package SWISH::Prog::KSx::Result;
 use strict;
 use warnings;
 
 our $VERSION = '0.01';
 
+use base qw( SWISH::Prog::Result );
+use SWISH::3 ':constants';
+
 =head1 NAME
 
-SWISH::Prog::KSx - Swish3 KinoSearch backend
+SWISH::Prog::KSx::Result - search result for Swish3 KinoSearch backend
 
 =head1 SYNOPSIS
 
- # create an index
- use SWISH::Prog;
- my $indexer = SWISH::Prog->new(
-    invindex   => 'path/to/index.swish',
-    aggregator => 'fs',
-    indexer    => 'ks',
-    config     => 'path/to/swish.conf',
- );
- 
- $indexer->index('path/to/files');
- 
- 
- # then search the index
- my $searcher = SWISH::Prog::Xapian::Searcher->new(
-    invindex => 'path/to/index.swish',
-    config   => 'path/to/swish.conf',
- );
- my $results = $searcher->search('my query')
- while ( my $result = $results->next ) {
-    printf("%s : %s\n", $result->score, $result->uri);
- }
-
+ # see SWISH::Prog::Result
 
 =head1 DESCRIPTION
 
-SWISH::Prog::KSx is a KinoSearch-based implementation of Swish3,
-using the SWISH::3 bindings for libswish3.
+SWISH::Prog::KSx::Result is a KinoSearch-based Result
+class for Swish3.
 
-See the Swish3 development site at http://dev.swish-e.org/wiki/swish3
+=head1 METHODS
+
+=cut
+
+=head2 uri
+
+Returns the uri (unique term) for the result document.
+
+=cut
+
+sub uri { $_[0]->{doc}->{uri} }
+
+=head2 title
+
+Returns the title of the result document.
+
+=cut
+
+sub title { $_[0]->{doc}->{swishtitle} }
+
+1;
+
+__END__
 
 =head1 AUTHOR
 
@@ -55,6 +59,7 @@ automatically be notified of progress on your bug as I make changes.
 You can find documentation for this module with the perldoc command.
 
     perldoc SWISH::Prog::KSx
+
 
 You can also look for information at:
 
@@ -90,4 +95,3 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1;    # End of SWISH::Prog::KSx

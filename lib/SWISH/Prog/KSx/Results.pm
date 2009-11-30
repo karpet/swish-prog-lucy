@@ -1,44 +1,52 @@
-package SWISH::Prog::KSx;
+package SWISH::Prog::KSx::Results;
 use strict;
 use warnings;
 
 our $VERSION = '0.01';
 
+use base qw( SWISH::Prog::Results );
+use SWISH::Prog::KSx::Result;
+
+__PACKAGE__->mk_ro_accessors(qw( ks_hits ));
+
 =head1 NAME
 
-SWISH::Prog::KSx - Swish3 KinoSearch backend
+SWISH::Prog::KSx::Results - search results for Swish3 KinoSearch backend
 
 =head1 SYNOPSIS
 
- # create an index
- use SWISH::Prog;
- my $indexer = SWISH::Prog->new(
-    invindex   => 'path/to/index.swish',
-    aggregator => 'fs',
-    indexer    => 'ks',
-    config     => 'path/to/swish.conf',
- );
- 
- $indexer->index('path/to/files');
- 
- 
- # then search the index
- my $searcher = SWISH::Prog::Xapian::Searcher->new(
-    invindex => 'path/to/index.swish',
-    config   => 'path/to/swish.conf',
- );
- my $results = $searcher->search('my query')
- while ( my $result = $results->next ) {
-    printf("%s : %s\n", $result->score, $result->uri);
- }
-
+ # see SWISH::Prog::Results
 
 =head1 DESCRIPTION
 
-SWISH::Prog::KSx is a KinoSearch-based implementation of Swish3,
-using the SWISH::3 bindings for libswish3.
+SWISH::Prog::KSx::Results is a KinoSearch-based Results
+class for Swish3.
 
-See the Swish3 development site at http://dev.swish-e.org/wiki/swish3
+=head1 METHODS
+
+=head2 next
+
+Returns the next SWISH::Prog::KSx::Result object from the result set.
+
+=cut
+
+sub next {
+    my $hit = $_[0]->ks_hits->next or return;
+    return SWISH::Prog::KSx::Result->new(
+        doc   => $hit,
+        score => int( $hit->get_score * 10000 ),  # scale like xapian, swish-e
+    );
+}
+
+=head2 ks_hits
+
+Get the internal KinoSearch::Search::Hits object.
+
+=cut
+
+1;
+
+__END__
 
 =head1 AUTHOR
 
@@ -55,6 +63,7 @@ automatically be notified of progress on your bug as I make changes.
 You can find documentation for this module with the perldoc command.
 
     perldoc SWISH::Prog::KSx
+
 
 You can also look for information at:
 
@@ -90,4 +99,3 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1;    # End of SWISH::Prog::KSx
