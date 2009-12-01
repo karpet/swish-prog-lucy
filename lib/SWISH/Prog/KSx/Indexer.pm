@@ -109,7 +109,7 @@ sub init {
 =head2 process( I<doc> )
 
 Overrides base method to parse the I<doc> (a SWISH::Prog::Doc object)
-with SWISH::3->parse_buffer() method.
+with the SWISH::3 parse_buffer() method.
 
 =cut
 
