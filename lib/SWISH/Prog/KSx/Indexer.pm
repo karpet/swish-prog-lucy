@@ -68,16 +68,16 @@ sub init {
             . " requires SWISH::Prog::Xapian::InvIndex-derived object";
     }
 
-    # TODO XML-ify $self->{config} and pass in to parser too.
-    $self->{s3} = SWISH::3->new(
+    my $swish_3_config = $self->{config}->ver2_to_ver3();
+
+    # TODO can pass s3 in?
+    $self->{s3} ||= SWISH::3->new(
         handler => sub {
             $self->_handler(@_);
-        }
+        },
+        config => $swish_3_config,
     );
     $self->{s3}->analyzer->set_tokenize(0);    # let KS do it
-
-    # so Headers uses correct version
-    $ENV{SWISH3} = 1;
 
     my $schema   = KinoSearch::Schema->new();
     my $analyzer = KinoSearch::Analysis::PolyAnalyzer->new(
@@ -97,7 +97,8 @@ sub init {
         $schema->spec_field( name => $d, type => $string_type );
     }
 
-    $self->{ks} = KinoSearch::Indexer->new(
+    # TODO can pass ks in?
+    $self->{ks} ||= KinoSearch::Indexer->new(
         schema => $schema,
         index  => $self->invindex->path,
         create => 1,
