@@ -52,9 +52,6 @@ sub init {
     my $self = shift;
     $self->SUPER::init(@_);
 
-    # default config
-    $self->{config} ||= SWISH::Prog::Config->new;
-
     # default index
     $self->{invindex} ||= SWISH::Prog::KSx::InvIndex->new;
 
@@ -68,20 +65,31 @@ sub init {
             . " requires SWISH::Prog::Xapian::InvIndex-derived object";
     }
 
-    my $swish_3_config = $self->{config}->ver2_to_ver3();
-
     # TODO can pass s3 in?
     $self->{s3} ||= SWISH::3->new(
         handler => sub {
             $self->_handler(@_);
-        },
-        config => $swish_3_config,
+        }
     );
-    $self->{s3}->analyzer->set_tokenize(0);    # let KS do it
+
+    # config resolution order
+    # 1. default config via SWISH::3->new
+    # 2. any existing header file.
+
+    $self->{s3}->config->read(
+        $self->invindex->path->file( SWISH_HEADER_FILE() )->stringify );
+
+    # 3. $swish_3_config via 'config' param passed to this method
+    $self->{config} = $self->verify_isa_swish_prog_config( $self->{config} );
+    my $swish_3_config = $self->{config}->ver2_to_ver3();
+    $self->{s3}->config->add($swish_3_config);
+
+    # 4. always turn off tokenizer, preferring KS do it
+    $self->{s3}->analyzer->set_tokenize(0);
 
     my $schema   = KinoSearch::Schema->new();
     my $analyzer = KinoSearch::Analysis::PolyAnalyzer->new(
-        language => 'en',                      # TODO config
+        language => 'en',    # TODO via config
     );
     my $fulltext_type = KinoSearch::FieldType::FullTextType->new(
         analyzer      => $analyzer,
