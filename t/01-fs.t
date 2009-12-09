@@ -16,7 +16,8 @@ ok( my $program = SWISH::Prog->new(
         invindex   => $invindex,
         aggregator => 'fs',
         indexer    => 'ks',
-        config     => 't/test.conf',
+        config     => 't/config.xml',
+
         #verbose    => 1,
         #debug      => 1,
     ),
@@ -24,7 +25,9 @@ ok( my $program = SWISH::Prog->new(
 );
 
 # skip the index dir every time
-$program->config->FileRules('dirname is index.swish');
+# the '1' arg indicates to append the value, not replace.
+$program->config->FileRules( 'dirname is index.swish', 1 );
+$program->config->FileRules( 'filename is config.xml', 1 );
 
 ok( $program->index('t/'), "run program" );
 
