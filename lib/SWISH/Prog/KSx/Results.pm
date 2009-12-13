@@ -37,7 +37,7 @@ sub next {
     my $hit = $_[0]->ks_hits->next or return;
     return SWISH::Prog::KSx::Result->new(
         doc   => $hit,
-        score => int( $hit->get_score * 10000 ),  # scale like xapian, swish-e
+        score => int( $hit->get_score * 1000 ),  # scale like xapian, swish-e
     );
 }
 
