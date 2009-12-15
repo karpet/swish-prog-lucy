@@ -64,6 +64,31 @@ sub init {
             . " requires SWISH::Prog::Xapian::InvIndex-derived object";
     }
 
+    my $schema   = KinoSearch::Schema->new();
+    my $analyzer = KinoSearch::Analysis::PolyAnalyzer->new(
+        language => 'en',    # TODO via config
+    );
+    my $fulltext_type = KinoSearch::FieldType::FullTextType->new(
+        analyzer      => $analyzer,
+        highlightable => 1,
+    );
+    my $string_type
+        = KinoSearch::FieldType::StringType->new( sortable => 1, );
+
+    # TODO foreach meta/prop add schema spec_field()
+    $schema->spec_field( name => 'swishdefault', type => $fulltext_type );
+    $schema->spec_field( name => 'swishtitle',   type => $fulltext_type );
+    for my $d ( SWISH_DOC_FIELDS() ) {
+        $schema->spec_field( name => $d, type => $string_type );
+    }
+
+    # TODO can pass ks in?
+    $self->{ks} ||= KinoSearch::Indexer->new(
+        schema => $schema,
+        index  => $self->invindex->path,
+        create => 1,
+    );
+
     # config resolution order
     # 1. default config via SWISH::3->new
 
@@ -89,31 +114,6 @@ sub init {
 
     # 4. always turn off tokenizer, preferring KS do it
     $self->{s3}->analyzer->set_tokenize(0);
-
-    my $schema   = KinoSearch::Schema->new();
-    my $analyzer = KinoSearch::Analysis::PolyAnalyzer->new(
-        language => 'en',    # TODO via config
-    );
-    my $fulltext_type = KinoSearch::FieldType::FullTextType->new(
-        analyzer      => $analyzer,
-        highlightable => 1,
-    );
-    my $string_type
-        = KinoSearch::FieldType::StringType->new( sortable => 1, );
-
-    # TODO foreach meta/prop add schema spec_field()
-    $schema->spec_field( name => 'swishdefault', type => $fulltext_type );
-    $schema->spec_field( name => 'swishtitle',   type => $fulltext_type );
-    for my $d ( SWISH_DOC_FIELDS() ) {
-        $schema->spec_field( name => $d, type => $string_type );
-    }
-
-    # TODO can pass ks in?
-    $self->{ks} ||= KinoSearch::Indexer->new(
-        schema => $schema,
-        index  => $self->invindex->path,
-        create => 1,
-    );
 
     return $self;
 }
