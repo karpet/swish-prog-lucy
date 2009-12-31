@@ -64,6 +64,37 @@ sub init {
             . " requires SWISH::Prog::Xapian::InvIndex-derived object";
     }
 
+    # config resolution order
+    # 1. default config via SWISH::3->new
+
+    # TODO can pass s3 in?
+    $self->{s3} ||= SWISH::3->new(
+        handler => sub {
+
+            #$self->_handler(@_);
+        }
+    );
+
+    #SWISH::3->describe( $self->{s3} );
+
+    # 2. any existing header file.
+    my $swish_3_index
+        = $self->invindex->path->file( SWISH_HEADER_FILE() )->stringify;
+
+    if ( -r $swish_3_index ) {
+        $self->{s3}->config->read($swish_3_index);
+    }
+
+    # 3. via 'config' param passed to this method
+    if ( exists $self->{config} ) {
+
+        # this utility method defined in base SWISH::Prog::Indexer class.
+        $self->_verify_swish3_config();
+    }
+
+    # 4. always turn off tokenizer, preferring KS do it
+    $self->{s3}->analyzer->set_tokenize(0);
+
     my $schema   = KinoSearch::Schema->new();
     my $analyzer = KinoSearch::Analysis::PolyAnalyzer->new(
         language => 'en',    # TODO via config
@@ -88,32 +119,6 @@ sub init {
         index  => $self->invindex->path,
         create => 1,
     );
-
-    # config resolution order
-    # 1. default config via SWISH::3->new
-
-    # TODO can pass s3 in?
-    $self->{s3} ||= SWISH::3->new(
-        handler => sub {
-            $self->_handler(@_);
-        }
-    );
-
-    # 2. any existing header file.
-    my $swish_3_index = $self->invindex->path->file( SWISH_HEADER_FILE() );
-    if ( -r $swish_3_index ) {
-        $self->{s3}->config->read("$swish_3_index");
-    }
-
-    # 3. via 'config' param passed to this method
-    if ( exists $self->{config} ) {
-
-        # this utility method defined in base SWISH::Prog::Indexer class.
-        $self->_verify_swish3_config();
-    }
-
-    # 4. always turn off tokenizer, preferring KS do it
-    $self->{s3}->analyzer->set_tokenize(0);
 
     return $self;
 }
