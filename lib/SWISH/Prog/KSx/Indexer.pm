@@ -70,8 +70,7 @@ sub init {
     # TODO can pass s3 in?
     $self->{s3} ||= SWISH::3->new(
         handler => sub {
-
-            #$self->_handler(@_);
+            $self->_handler(@_);
         }
     );
 
@@ -82,7 +81,7 @@ sub init {
         = $self->invindex->path->file( SWISH_HEADER_FILE() )->stringify;
 
     if ( -r $swish_3_index ) {
-        $self->{s3}->config->read($swish_3_index);
+        $self->{s3}->config->add($swish_3_index);
     }
 
     # 3. via 'config' param passed to this method
@@ -150,6 +149,7 @@ sub _handler {
     }
 
     # TODO flesh %doc out with properties
+    #warn dump \%doc;
 
     $self->{ks}->add_doc( \%doc );
 }
