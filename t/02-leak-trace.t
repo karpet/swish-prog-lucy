@@ -21,7 +21,7 @@ my $invindex = SWISH::Prog::KSx::InvIndex->new(
 SKIP: {
 
     unless ( $ENV{TEST_LEAKS} ) {
-        skip "set TEST_LEAKS to test memory leaks", 2;
+        skip "set TEST_LEAKS to test memory leaks", 1;
     }
 
     leaks_cmp_ok {
@@ -31,8 +31,8 @@ SKIP: {
         my $program = SWISH::Prog->new(
             invindex   => "$invindex",  # force stringify to avoid leaks
             aggregator => 'fs',
-            #indexer    => 'ks',
-            #config     => 't/config.xml',
+            indexer    => 'ks',
+            config     => 't/config.xml',
 
             #verbose    => 1,
             #debug      => 1,
@@ -42,10 +42,10 @@ SKIP: {
 
         # skip the index dir every time
         # the '1' arg indicates to append the value, not replace.
-        #$program->config->FileRules( 'dirname is index.swish', 1 );
-        #$program->config->FileRules( 'filename is config.xml', 1 );
+        $program->config->FileRules( 'dirname is index.swish', 1 );
+        $program->config->FileRules( 'filename is config.xml', 1 );
 
-        #$program->index('t/test.html');
+        $program->run('t/test.html');
 
     }
     '<=', $KNOWN_LEAKS, "SWISH::Prog leak test";
