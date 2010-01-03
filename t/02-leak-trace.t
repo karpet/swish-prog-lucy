@@ -8,7 +8,7 @@ use Test::LeakTrace;
 
 #use Devel::LeakGuard::Object qw( GLOBAL_bless :at_end leakguard );
 
-my $KNOWN_LEAKS = 2;    # KinoSearch has these
+my $KNOWN_LEAKS = 105;    # KinoSearch, SWISH::Filter, et al
 
 use_ok('SWISH::Prog');
 use_ok('SWISH::Prog::KSx::InvIndex');
