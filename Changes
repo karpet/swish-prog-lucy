@@ -14,3 +14,7 @@ Revision history for SWISH-Prog-KSx
 0.04    02 Jan 2010
     * fix mem leaks, config use.
 
+0.05    xxx
+    * add fielded search support.
+
+

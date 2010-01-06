@@ -2,7 +2,7 @@ package SWISH::Prog::KSx::Indexer;
 use strict;
 use warnings;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use base qw( SWISH::Prog::Indexer );
 use SWISH::Prog::KSx::InvIndex;
@@ -11,6 +11,7 @@ use KinoSearch::Indexer;
 use KinoSearch::Schema;
 use KinoSearch::Analysis::PolyAnalyzer;
 use KinoSearch::FieldType::FullTextType;
+use KinoSearch::FieldType::StringType;
 
 use Carp;
 use SWISH::3 qw( :constants );
@@ -98,18 +99,81 @@ sub init {
     my $analyzer = KinoSearch::Analysis::PolyAnalyzer->new(
         language => 'en',    # TODO via config
     );
-    my $fulltext_type = KinoSearch::FieldType::FullTextType->new(
+
+    # build the KS fields, which are a merger of MetaNames+PropertyNames
+    my %fields;
+    my $config    = $self->{s3}->config;
+    my $metanames = $config->get_metanames;
+    for my $name ( @{ $metanames->keys } ) {
+
+        #my $metaname = $metanames->get($name);
+        $fields{$name}->{is_meta} = 1;
+    }
+
+    my $properties = $config->get_properties;
+    for my $name ( @{ $properties->keys } ) {
+        my $property = $properties->get($name);
+        $fields{$name}->{is_prop} = 1;
+        if ( $property->sort ) {
+            $fields{$name}->{sortable} = 1;
+        }
+    }
+
+    #dump( \%fields );
+
+    my $metaname_plus_prop = KinoSearch::FieldType::FullTextType->new(
         analyzer      => $analyzer,
         highlightable => 1,
     );
-    my $string_type
+    my $metaname_only = KinoSearch::FieldType::FullTextType->new(
+        analyzer => $analyzer,
+        stored   => 0,
+    );
+    my $property_only
         = KinoSearch::FieldType::StringType->new( sortable => 1, );
+    my $store_no_sort = KinoSearch::FieldType::StringType->new(
+        sortable => 0,
+        stored   => 1,
+    );
 
-    # TODO foreach meta/prop add schema spec_field()
-    $schema->spec_field( name => 'swishdefault', type => $fulltext_type );
-    $schema->spec_field( name => 'swishtitle',   type => $fulltext_type );
+    for my $name ( keys %fields ) {
+        my $field = $fields{$name};
+        if ( $field->{is_meta} and !$field->{is_prop} ) {
+            $schema->spec_field(
+                name => $name,
+                type => $metaname_only
+            );
+        }
+        elsif ( $field->{is_meta} and $field->{is_prop} ) {
+            $schema->spec_field(
+                name => $name,
+                type => $metaname_plus_prop
+            );
+        }
+        elsif (!$field->{is_meta}
+            and $field->{is_prop}
+            and !$field->{sortable} )
+        {
+            $schema->spec_field(
+                name => $name,
+                type => $store_no_sort
+            );
+        }
+        elsif (!$field->{is_meta}
+            and $field->{is_prop}
+            and $field->{sortable} )
+        {
+            $schema->spec_field(
+                name => $name,
+                type => $property_only
+            );
+        }
+    }
+
     for my $d ( SWISH_DOC_FIELDS() ) {
-        $schema->spec_field( name => $d, type => $string_type );
+        unless ( exists $fields{$d} ) {
+            $schema->spec_field( name => $d, type => $property_only );
+        }
     }
 
     # TODO can pass ks in?
