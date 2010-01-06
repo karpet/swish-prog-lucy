@@ -49,12 +49,12 @@ sub init {
     my $self = shift;
     $self->SUPER::init(@_);
 
-    #Data::Dump::dump($self);
-
     my $invindex = $self->invindex;
+    my $config   = $invindex->meta;
+    my $lang     = $config->Index->{ SWISH::3::SWISH_INDEX_STEMMER_LANG() };
     $self->{ks} = KinoSearch::Searcher->new( index => "$invindex" );
     $self->{analyzer}
-        = KinoSearch::Analysis::PolyAnalyzer->new( language => 'en', );
+        = KinoSearch::Analysis::PolyAnalyzer->new( language => $lang, );
     $self->{qp} = KinoSearch::QueryParser->new(
 
         # only need to explicitly declare fields if we do not want

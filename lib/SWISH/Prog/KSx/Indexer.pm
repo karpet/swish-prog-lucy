@@ -95,14 +95,16 @@ sub init {
     # 4. always turn off tokenizer, preferring KS do it
     $self->{s3}->analyzer->set_tokenize(0);
 
-    my $schema   = KinoSearch::Schema->new();
-    my $analyzer = KinoSearch::Analysis::PolyAnalyzer->new(
-        language => 'en',    # TODO via config
-    );
+    my $config = $self->{s3}->config;
+    my $lang = $config->get_index->get( SWISH_INDEX_STEMMER_LANG() ) || 'en';
+    $self->{_lang} = $lang;    # cache for finish()
+    my $schema = KinoSearch::Schema->new();
+    my $analyzer
+        = KinoSearch::Analysis::PolyAnalyzer->new( language => $lang, );
 
     # build the KS fields, which are a merger of MetaNames+PropertyNames
     my %fields;
-    my $config    = $self->{s3}->config;
+
     my $metanames = $config->get_metanames;
     for my $name ( @{ $metanames->keys } ) {
 
@@ -235,7 +237,8 @@ sub finish {
     # write header
     my $index = $self->{s3}->config->get_index;
 
-    $index->set( 'Format', 'KSx' );
+    $index->set( SWISH_INDEX_FORMAT(),       'KSx' );
+    $index->set( SWISH_INDEX_STEMMER_LANG(), $self->{_lang} );
 
     $self->{s3}->config->write(
         $self->invindex->path->file( SWISH_HEADER_FILE() )->stringify );
