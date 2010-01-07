@@ -231,21 +231,26 @@ method.
 sub finish {
     my $self = shift;
 
+    return 0 if $self->{_is_finished};
+
     # commit our changes
     $self->{ks}->commit();
 
     # write header
     my $index = $self->{s3}->config->get_index;
 
+    $index->set( SWISH_INDEX_NAME(),         $self->invindex->path );
     $index->set( SWISH_INDEX_FORMAT(),       'KSx' );
     $index->set( SWISH_INDEX_STEMMER_LANG(), $self->{_lang} );
 
     $self->{s3}->config->write(
         $self->invindex->path->file( SWISH_HEADER_FILE() )->stringify );
 
-    $self->{s3} = undef;    # just to avoid mem leak warnings
+    $self->{s3} = undef;    # invalidate this indexer
 
     $self->SUPER::finish(@_);
+
+    $self->{_is_finished} = 1;
 }
 
 1;
