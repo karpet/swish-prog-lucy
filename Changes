@@ -17,4 +17,6 @@ Revision history for SWISH-Prog-KSx
 0.05    07 Jan 2009
     * add fielded search support.
 
+0.06    xxx
+    * add properties to index as stored but non-analyzed fields.
 
