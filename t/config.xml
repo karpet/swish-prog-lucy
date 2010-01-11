@@ -2,6 +2,7 @@
  <SomeDirective>true</SomeDirective>
  <PropertyNames>
   <foobar />
+  <bar alias_for="foobar" />
  </PropertyNames>
  <TagAlias>
   <swishdescription>foo</swishdescription>

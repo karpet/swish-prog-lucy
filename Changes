@@ -19,4 +19,6 @@ Revision history for SWISH-Prog-KSx
 
 0.06    xxx
     * add properties to index as stored but non-analyzed fields.
+    * alias_for meta/props not created as fields (TODO queryparser
+      mapping)
 

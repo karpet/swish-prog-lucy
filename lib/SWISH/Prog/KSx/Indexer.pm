@@ -107,14 +107,14 @@ sub init {
 
     my $metanames = $config->get_metanames;
     for my $name ( @{ $metanames->keys } ) {
-
-        #my $metaname = $metanames->get($name);
+        next if $metanames->get($name)->alias_for;
         $fields{$name}->{is_meta} = 1;
     }
 
     my $properties = $config->get_properties;
     for my $name ( @{ $properties->keys } ) {
         my $property = $properties->get($name);
+        next if $property->alias_for;
         $fields{$name}->{is_prop} = 1;
         if ( $property->sort ) {
             $fields{$name}->{sortable} = 1;
@@ -204,6 +204,9 @@ sub process {
 
 sub _handler {
     my ( $self, $data ) = @_;
+    my $config = $data->config;
+    my $conf_props = $config->get_properties;
+    my $conf_metas = $config->get_metanames;
     my %doc;
     for my $d ( SWISH_DOC_FIELDS() ) {
         $doc{$d} = $data->doc->$d;
@@ -211,12 +214,14 @@ sub _handler {
     my $props = $data->properties;
     for my $p ( keys %$props ) {
         next if exists $doc{$p};
+        next if $conf_props->get($p)->alias_for;
         $doc{$p} = join( "\003", @{ $props->{$p} } );
     }
 
     my $metas = $data->metanames;
     for my $m ( keys %$metas ) {
         next if exists $doc{$m};
+        next if $conf_metas->get($m)->alias_for;
         $doc{$m} = join( "\n", @{ $metas->{$m} } );
     }
 
