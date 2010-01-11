@@ -43,6 +43,21 @@ Returns the title of the result document.
 
 sub title { $_[0]->{doc}->{swishtitle} }
 
+=head2 get_property( I<PropertyName> )
+
+Returns the value for I<PropertyName>.
+
+=cut
+
+sub get_property {
+    my $self = shift;
+    my $propname = shift or croak "PropertyName required";
+    if ( !exists $self->{doc}->{$propname} ) {
+        croak "no such PropertyName: $propname";
+    }
+    return $self->{doc}->{$propname};
+}
+
 1;
 
 __END__
