@@ -208,13 +208,18 @@ sub _handler {
     for my $d ( SWISH_DOC_FIELDS() ) {
         $doc{$d} = $data->doc->$d;
     }
-    my $metas = $data->metanames;
+    my $props = $data->properties;
+    for my $p ( keys %$props ) {
+        next if exists $doc{$p};
+        $doc{$p} = join( "\003", @{ $props->{$p} } );
+    }
 
+    my $metas = $data->metanames;
     for my $m ( keys %$metas ) {
+        next if exists $doc{$m};
         $doc{$m} = join( "\n", @{ $metas->{$m} } );
     }
 
-    # TODO flesh %doc out with properties
     #warn dump \%doc;
 
     $self->{ks}->add_doc( \%doc );

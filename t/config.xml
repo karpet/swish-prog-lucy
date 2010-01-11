@@ -1,3 +1,9 @@
 <swish>
  <SomeDirective>true</SomeDirective>
+ <PropertyNames>
+  <foobar />
+ </PropertyNames>
+ <TagAlias>
+  <swishdescription>foo</swishdescription>
+ </TagAlias>
 </swish>
