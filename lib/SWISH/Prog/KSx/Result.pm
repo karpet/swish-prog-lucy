@@ -6,6 +6,7 @@ our $VERSION = '0.06';
 
 use base qw( SWISH::Prog::Result );
 use SWISH::3 ':constants';
+use Carp;
 
 =head1 NAME
 
