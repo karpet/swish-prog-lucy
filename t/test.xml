@@ -1,1 +1,4 @@
-<foo>some words here in xml doc</foo>
+<doc>
+ <foo>some words here in xml doc</foo>
+ <bar>chocolate bar</bar>
+</doc>

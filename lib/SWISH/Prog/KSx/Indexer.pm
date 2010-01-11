@@ -204,7 +204,7 @@ sub process {
 
 sub _handler {
     my ( $self, $data ) = @_;
-    my $config = $data->config;
+    my $config     = $data->config;
     my $conf_props = $config->get_properties;
     my $conf_metas = $config->get_metanames;
     my %doc;
@@ -214,15 +214,27 @@ sub _handler {
     my $props = $data->properties;
     for my $p ( keys %$props ) {
         next if exists $doc{$p};
-        next if $conf_props->get($p)->alias_for;
-        $doc{$p} = join( "\003", @{ $props->{$p} } );
+        my $alias = $conf_props->get($p)->alias_for;
+        my $value = join( "\003", @{ $props->{$p} } );
+        if ($alias) {
+            $doc{$alias} = $value;
+        }
+        else {
+            $doc{$p} = $value;
+        }
     }
 
     my $metas = $data->metanames;
     for my $m ( keys %$metas ) {
         next if exists $doc{$m};
-        next if $conf_metas->get($m)->alias_for;
-        $doc{$m} = join( "\n", @{ $metas->{$m} } );
+        my $alias = $conf_metas->get($m)->alias_for;
+        my $value = join( "\n", @{ $metas->{$m} } );
+        if ($alias) {
+            $doc{$alias} = $value;
+        }
+        else {
+            $doc{$m} = $value;
+        }
     }
 
     #warn dump \%doc;
