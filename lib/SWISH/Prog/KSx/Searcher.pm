@@ -13,6 +13,7 @@ use KinoSearch::Searcher;
 use KinoSearch::Analysis::PolyAnalyzer;
 use KinoSearch::QueryParser;
 use KinoSearch::Search::RangeQuery;
+use Data::Dump qw( dump );
 
 =head1 NAME
 
@@ -61,8 +62,9 @@ sub init {
         # only need to explicitly declare fields if we do not want
         # all the fields defined in schema.
         #fields   => [ SWISH::3::SWISH_DOC_FIELDS(), 'swishdefault' ],
-        schema   => $self->{ks}->get_schema,
-        analyzer => $self->{analyzer},
+        schema         => $self->{ks}->get_schema,
+        analyzer       => $self->{analyzer},
+        default_boolop => 'AND',                     # like swish-e
     );
     $self->{qp}->set_heed_colons(1);
 
@@ -112,6 +114,7 @@ sub search {
         offset     => $start,
         num_wanted => $max,
     );
+
     for my $limit (@$limits) {
         if ( !ref $limit or ref($limit) ne 'ARRAY' or @$limit != 3 ) {
             croak "poorly-formed limit. should be an array ref of 3 values.";
@@ -121,8 +124,17 @@ sub search {
             lower_term => $limit->[1],
             upper_term => $limit->[2],
         );
-        $hits_args{query}->add_child($range);
+        if ( $hits_args{query}->isa('KinoSearch::Search::TermQuery') ) {
+            $hits_args{query} = $self->{qp}
+                ->make_and_query( [ $range, $hits_args{query} ] );
+        }
+        else {
+            $hits_args{query}->add_child($range);
+        }
     }
+
+    #carp dump $hits_args{query}->dump;
+
     if ($order) {
         $hits_args{sort_spec} = $order;
     }
