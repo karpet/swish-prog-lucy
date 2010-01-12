@@ -107,21 +107,24 @@ sub init {
 
     my $metanames = $config->get_metanames;
     for my $name ( @{ $metanames->keys } ) {
-        next if $metanames->get($name)->alias_for;
-        $fields{$name}->{is_meta} = 1;
+        my $alias = $metanames->get($name)->alias_for;
+        $fields{$name}->{is_meta}  = 1;
+        $fields{$name}->{is_alias} = $alias;
     }
 
     my $properties = $config->get_properties;
     for my $name ( @{ $properties->keys } ) {
         my $property = $properties->get($name);
-        next if $property->alias_for;
-        $fields{$name}->{is_prop} = 1;
+        my $alias    = $property->alias_for;
+        $fields{$name}->{is_prop}  = 1;
+        $fields{$name}->{is_alias} = $alias;
         if ( $property->sort ) {
             $fields{$name}->{sortable} = 1;
         }
     }
 
     $self->{_fields} = \%fields;
+
     #dump( \%fields );
 
     my $metaname_plus_prop = KinoSearch::FieldType::FullTextType->new(
@@ -141,6 +144,11 @@ sub init {
 
     for my $name ( keys %fields ) {
         my $field = $fields{$name};
+
+        # do not register alias fields separately,
+        # but we will store them in _handler()
+        # under the field they point to.
+        next if defined $field->{is_alias};
         if ( $field->{is_meta} and !$field->{is_prop} ) {
             $schema->spec_field(
                 name => $name,
@@ -213,21 +221,27 @@ sub _handler {
     my $doc_prop_map = SWISH_DOC_PROP_MAP();
     for my $propname ( keys %$doc_prop_map ) {
         my $attr = $doc_prop_map->{$propname};
-        $doc{$propname} = $data->doc->$attr;
+        $doc{$propname} = [ $data->doc->$attr ];
     }
     my $props = $data->properties;
     my $metas = $data->metanames;
-    for my $fname (sort keys %{ $self->{_fields} }) {
+    for my $fname ( sort keys %{ $self->{_fields} } ) {
         my $field = $self->{_fields}->{$fname};
-        if ($field->{is_meta}) {
-            $doc{$fname} = join("\n", @{ $metas->{$fname} });
+        my $key = defined $field->{is_alias} ? $field->{is_alias} : $fname;
+        if ( $field->{is_prop} ) {
+            push( @{ $doc{$key} }, @{ $props->{$fname} } );
         }
-        elsif ($field->{is_prop}) {
-            $doc{$fname} = join( "\003", @{ $props->{$fname} } );
+        elsif ( $field->{is_meta} ) {
+            push( @{ $doc{$key} }, @{ $metas->{$fname} } );
         }
         else {
-            $doc{$fname} = join("\n", @{ $metas->{$fname} });
+            croak "field '$fname' is neither a PropertyName nor MetaName";
         }
+    }
+
+    # serialize the doc with our tokenpos_bump char
+    for my $k ( keys %doc ) {
+        $doc{$k} = join( "\003", @{ $doc{$k} } );
     }
 
     #warn dump \%doc;
