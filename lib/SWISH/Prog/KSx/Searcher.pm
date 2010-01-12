@@ -12,6 +12,7 @@ use SWISH::Prog::KSx::Results;
 use KinoSearch::Searcher;
 use KinoSearch::Analysis::PolyAnalyzer;
 use KinoSearch::QueryParser;
+use KinoSearch::Search::RangeQuery;
 
 =head1 NAME
 
@@ -101,15 +102,27 @@ sub search {
     croak "query required" unless defined $query;
     my $opts = shift || {};
 
-    my $start = $opts->{start} || 0;
-    my $max   = $opts->{max}   || $self->max_hits;
-    my $order = $opts->{order};
+    my $start  = $opts->{start} || 0;
+    my $max    = $opts->{max}   || $self->max_hits;
+    my $order  = $opts->{order};
+    my $limits = $opts->{limit} || [];
 
     my %hits_args = (
         query      => $self->{qp}->parse("$query"),
         offset     => $start,
         num_wanted => $max,
     );
+    for my $limit (@$limits) {
+        if ( !ref $limit or ref($limit) ne 'ARRAY' or @$limit != 3 ) {
+            croak "poorly-formed limit. should be an array ref of 3 values.";
+        }
+        my $range = KinoSearch::Search::RangeQuery->new(
+            field      => $limit->[0],
+            lower_term => $limit->[1],
+            upper_term => $limit->[2],
+        );
+        $hits_args{query}->add_child($range);
+    }
     if ($order) {
         $hits_args{sort_spec} = $order;
     }
