@@ -108,24 +108,22 @@ sub init {
     my $metanames = $config->get_metanames;
     for my $name ( @{ $metanames->keys } ) {
         my $alias = $metanames->get($name)->alias_for;
-        $fields{$name}->{is_meta}  = 1;
-        $fields{$name}->{is_alias} = $alias;
+        $fields{$name}->{is_meta}       = 1;
+        $fields{$name}->{is_meta_alias} = $alias;
     }
 
     my $properties = $config->get_properties;
     for my $name ( @{ $properties->keys } ) {
         my $property = $properties->get($name);
         my $alias    = $property->alias_for;
-        $fields{$name}->{is_prop}  = 1;
-        $fields{$name}->{is_alias} = $alias;
+        $fields{$name}->{is_prop}       = 1;
+        $fields{$name}->{is_prop_alias} = $alias;
         if ( $property->sort ) {
             $fields{$name}->{sortable} = 1;
         }
     }
 
     $self->{_fields} = \%fields;
-
-    #dump( \%fields );
 
     my $metaname_plus_prop = KinoSearch::FieldType::FullTextType->new(
         analyzer      => $analyzer,
@@ -144,18 +142,45 @@ sub init {
 
     for my $name ( keys %fields ) {
         my $field = $fields{$name};
+        my $key   = $name;
 
-        # do not register alias fields separately,
-        # but we will store them in _handler()
-        # under the field they point to.
-        next if defined $field->{is_alias};
+        # if a field is purely an alias, skip it.
+        if (    defined $field->{is_meta_alias}
+            and defined $field->{is_prop_alias} )
+        {
+            $field->{store_as}->{ $field->{is_meta_alias} } = 1;
+            $field->{store_as}->{ $field->{is_prop_alias} } = 1;
+            next;
+        }
+
         if ( $field->{is_meta} and !$field->{is_prop} ) {
+            if ( defined $field->{is_meta_alias} ) {
+                $key = $field->{is_meta_alias};
+                $field->{store_as}->{$key} = 1;
+                next;
+            }
             $schema->spec_field(
                 name => $name,
                 type => $metaname_only
             );
         }
+        
+        # this is the trickiest case, because the field
+        # is both prop+meta and could be an alias for one
+        # and a real for the other.
+        # NOTE we have already eliminated (above) the case where
+        # the field is an alias for both.
         elsif ( $field->{is_meta} and $field->{is_prop} ) {
+            if ( defined $field->{is_meta_alias} ) {
+                $key                        = $field->{is_meta_alias};
+                $field->{store_as}->{$key}  = 1;
+                $field->{store_as}->{$name} = 1;
+            }
+            elsif ( defined $field->{is_prop_alias} ) {
+                $key                        = $field->{is_prop_alias};
+                $field->{store_as}->{$key}  = 1;
+                $field->{store_as}->{$name} = 1;
+            }
             $schema->spec_field(
                 name => $name,
                 type => $metaname_plus_prop
@@ -165,6 +190,11 @@ sub init {
             and $field->{is_prop}
             and !$field->{sortable} )
         {
+            if ( defined $field->{is_prop_alias} ) {
+                $key = $field->{is_prop_alias};
+                $field->{store_as}->{$key} = 1;
+                next;
+            }
             $schema->spec_field(
                 name => $name,
                 type => $store_no_sort
@@ -174,11 +204,17 @@ sub init {
             and $field->{is_prop}
             and $field->{sortable} )
         {
+            if ( defined $field->{is_prop_alias} ) {
+                $key = $field->{is_prop_alias};
+                $field->{store_as}->{$key} = 1;
+                next;
+            }
             $schema->spec_field(
                 name => $name,
                 type => $property_only
             );
         }
+
     }
 
     my $built_in_props = SWISH_DOC_PROP_MAP();
@@ -187,6 +223,8 @@ sub init {
             $schema->spec_field( name => $d, type => $property_only );
         }
     }
+
+    #dump( \%fields );
 
     # TODO can pass ks in?
     $self->{ks} ||= KinoSearch::Indexer->new(
@@ -227,15 +265,19 @@ sub _handler {
     my $metas = $data->metanames;
     for my $fname ( sort keys %{ $self->{_fields} } ) {
         my $field = $self->{_fields}->{$fname};
-        my $key = defined $field->{is_alias} ? $field->{is_alias} : $fname;
-        if ( $field->{is_prop} ) {
-            push( @{ $doc{$key} }, @{ $props->{$fname} } );
-        }
-        elsif ( $field->{is_meta} ) {
-            push( @{ $doc{$key} }, @{ $metas->{$fname} } );
-        }
-        else {
-            croak "field '$fname' is neither a PropertyName nor MetaName";
+
+        my @keys = keys %{ $field->{store_as} };
+
+        for my $key (@keys) {
+            if ( $field->{is_prop} ) {
+                push( @{ $doc{$key} }, @{ $props->{$fname} } );
+            }
+            elsif ( $field->{is_meta} ) {
+                push( @{ $doc{$key} }, @{ $metas->{$fname} } );
+            }
+            else {
+                croak "field '$fname' is neither a PropertyName nor MetaName";
+            }
         }
     }
 
