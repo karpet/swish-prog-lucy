@@ -174,12 +174,10 @@ sub init {
             if ( defined $field->{is_meta_alias} ) {
                 $key                        = $field->{is_meta_alias};
                 $field->{store_as}->{$key}  = 1;
-                $field->{store_as}->{$name} = 1;
             }
             elsif ( defined $field->{is_prop_alias} ) {
                 $key                        = $field->{is_prop_alias};
                 $field->{store_as}->{$key}  = 1;
-                $field->{store_as}->{$name} = 1;
             }
             $schema->spec_field(
                 name => $name,
@@ -214,7 +212,7 @@ sub init {
                 type => $property_only
             );
         }
-
+        $field->{store_as}->{$name} = 1;
     }
 
     my $built_in_props = SWISH_DOC_PROP_MAP();
