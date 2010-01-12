@@ -121,6 +121,7 @@ sub init {
         }
     }
 
+    $self->{_fields} = \%fields;
     #dump( \%fields );
 
     my $metaname_plus_prop = KinoSearch::FieldType::FullTextType->new(
@@ -172,7 +173,8 @@ sub init {
         }
     }
 
-    for my $d ( SWISH_DOC_FIELDS() ) {
+    my $built_in_props = SWISH_DOC_PROP_MAP();
+    for my $d ( keys %$built_in_props ) {
         unless ( exists $fields{$d} ) {
             $schema->spec_field( name => $d, type => $property_only );
         }
@@ -208,32 +210,23 @@ sub _handler {
     my $conf_props = $config->get_properties;
     my $conf_metas = $config->get_metanames;
     my %doc;
-    for my $d ( SWISH_DOC_FIELDS() ) {
-        $doc{$d} = $data->doc->$d;
+    my $doc_prop_map = SWISH_DOC_PROP_MAP();
+    for my $propname ( keys %$doc_prop_map ) {
+        my $attr = $doc_prop_map->{$propname};
+        $doc{$propname} = $data->doc->$attr;
     }
     my $props = $data->properties;
-    for my $p ( keys %$props ) {
-        next if exists $doc{$p};
-        my $alias = $conf_props->get($p)->alias_for;
-        my $value = join( "\003", @{ $props->{$p} } );
-        if ($alias) {
-            $doc{$alias} = $value;
-        }
-        else {
-            $doc{$p} = $value;
-        }
-    }
-
     my $metas = $data->metanames;
-    for my $m ( keys %$metas ) {
-        next if exists $doc{$m};
-        my $alias = $conf_metas->get($m)->alias_for;
-        my $value = join( "\n", @{ $metas->{$m} } );
-        if ($alias) {
-            $doc{$alias} = $value;
+    for my $fname (sort keys %{ $self->{_fields} }) {
+        my $field = $self->{_fields}->{$fname};
+        if ($field->{is_meta}) {
+            $doc{$fname} = join("\n", @{ $metas->{$fname} });
+        }
+        elsif ($field->{is_prop}) {
+            $doc{$fname} = join( "\003", @{ $props->{$fname} } );
         }
         else {
-            $doc{$m} = $value;
+            $doc{$fname} = join("\n", @{ $metas->{$fname} });
         }
     }
 

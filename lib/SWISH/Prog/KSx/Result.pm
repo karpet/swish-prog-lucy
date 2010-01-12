@@ -34,7 +34,7 @@ Returns the uri (unique term) for the result document.
 
 =cut
 
-sub uri { $_[0]->{doc}->{uri} }
+sub uri { $_[0]->{doc}->{swishdocpath} }
 
 =head2 title
 
