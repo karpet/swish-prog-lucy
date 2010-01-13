@@ -21,4 +21,5 @@ Revision history for SWISH-Prog-KSx
     * add properties to index as stored but non-analyzed fields.
     * alias_for meta/props not created as fields (TODO queryparser
       mapping)
+    * RangeQuery support added with search($query, { limit => $limit })
 

@@ -125,9 +125,15 @@ sub init {
 
     $self->{_fields} = \%fields;
 
-    my $metaname_plus_prop = KinoSearch::FieldType::FullTextType->new(
+    my $meta_and_prop_sortable = KinoSearch::FieldType::FullTextType->new(
         analyzer      => $analyzer,
         highlightable => 1,
+        sortable      => 1,
+    );
+    my $meta_and_prop_nosortable = KinoSearch::FieldType::FullTextType->new(
+        analyzer      => $analyzer,
+        highlightable => 1,
+        sortable      => 0,
     );
     my $metaname_only = KinoSearch::FieldType::FullTextType->new(
         analyzer => $analyzer,
@@ -164,7 +170,7 @@ sub init {
                 type => $metaname_only
             );
         }
-        
+
         # this is the trickiest case, because the field
         # is both prop+meta and could be an alias for one
         # and a real for the other.
@@ -172,16 +178,18 @@ sub init {
         # the field is an alias for both.
         elsif ( $field->{is_meta} and $field->{is_prop} ) {
             if ( defined $field->{is_meta_alias} ) {
-                $key                        = $field->{is_meta_alias};
-                $field->{store_as}->{$key}  = 1;
+                $key = $field->{is_meta_alias};
+                $field->{store_as}->{$key} = 1;
             }
             elsif ( defined $field->{is_prop_alias} ) {
-                $key                        = $field->{is_prop_alias};
-                $field->{store_as}->{$key}  = 1;
+                $key = $field->{is_prop_alias};
+                $field->{store_as}->{$key} = 1;
             }
             $schema->spec_field(
                 name => $name,
-                type => $metaname_plus_prop
+                type => $field->{sortable}
+                ? $meta_and_prop_sortable
+                : $meta_and_prop_nosortable,
             );
         }
         elsif (!$field->{is_meta}

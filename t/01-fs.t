@@ -1,4 +1,4 @@
-use Test::More tests => 13;
+use Test::More tests => 17;
 use strict;
 use Data::Dump qw( dump );
 
@@ -54,6 +54,20 @@ is( $result->uri, 't/test.html', 'get uri' );
 is( $result->title, "test html doc", "get title" );
 
 diag( $result->score );
+
+# test some search() features
+ok( my $results2 = $searcher->search(
+        'some', { limit => [ [qw( date 2010-01-01 2010-12-31 )] ] }
+    ),
+    "search()"
+);
+is( $results2->hits, 1, "1 hit" );
+while ( my $result2 = $results2->next ) {
+    diag( $result2->uri );
+    is( $result2->uri,   't/test.xml',  'get uri' );
+    is( $result2->title, "ima xml doc", "get title" );
+    diag( $result2->score );
+}
 
 END {
     unless ( $ENV{PERL_DEBUG} ) {

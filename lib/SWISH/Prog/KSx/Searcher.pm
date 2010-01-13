@@ -94,6 +94,12 @@ in SWISH::Prog::Searcher.
 Takes a KinoSearch::Search::SortSpec object, which will determine
 the sort order.
 
+=item limit
+
+Takes an arrayref of arrayrefs. Each child arrayref should
+have three values: a field (PropertyName) value, a lower limit
+and an upper limit.
+
 =back
 
 =cut
@@ -124,13 +130,8 @@ sub search {
             lower_term => $limit->[1],
             upper_term => $limit->[2],
         );
-        if ( $hits_args{query}->isa('KinoSearch::Search::TermQuery') ) {
-            $hits_args{query} = $self->{qp}
-                ->make_and_query( [ $range, $hits_args{query} ] );
-        }
-        else {
-            $hits_args{query}->add_child($range);
-        }
+        $hits_args{query}
+            = $self->{qp}->make_and_query( [ $range, $hits_args{query} ] );
     }
 
     #carp dump $hits_args{query}->dump;
