@@ -125,16 +125,34 @@ sub init {
 
     $self->{_fields} = \%fields;
 
-    my $meta_and_prop_sortable = KinoSearch::FieldType::FullTextType->new(
-        analyzer      => $analyzer,
-        highlightable => 1,
-        sortable      => 1,
-    );
-    my $meta_and_prop_nosortable = KinoSearch::FieldType::FullTextType->new(
-        analyzer      => $analyzer,
-        highlightable => 1,
-        sortable      => 0,
-    );
+    # versions > 0.30072 allow for sortable fulltexttype
+    # but svn trunk is version 0.3007 so we can't just test $VERSION
+    my ( $meta_and_prop_sortable, $meta_and_prop_nosortable );
+
+    eval {
+        $meta_and_prop_sortable = KinoSearch::FieldType::FullTextType->new(
+            analyzer      => $analyzer,
+            highlightable => 1,
+            sortable      => 1,
+        );
+        $meta_and_prop_nosortable = KinoSearch::FieldType::FullTextType->new(
+            analyzer      => $analyzer,
+            highlightable => 1,
+            sortable      => 0,
+        );
+    };
+
+    if ( !$meta_and_prop_sortable ) {
+        $meta_and_prop_sortable = KinoSearch::FieldType::FullTextType->new(
+            analyzer      => $analyzer,
+            highlightable => 1,
+        );
+        $meta_and_prop_nosortable = KinoSearch::FieldType::FullTextType->new(
+            analyzer      => $analyzer,
+            highlightable => 1,
+        );
+    }
+
     my $metaname_only = KinoSearch::FieldType::FullTextType->new(
         analyzer => $analyzer,
         stored   => 0,
