@@ -22,4 +22,5 @@ Revision history for SWISH-Prog-KSx
     * alias_for meta/props not created as fields (TODO queryparser
       mapping)
     * RangeQuery support added with search($query, { limit => $limit })
-
+    * PolySearcher always used internall, 
+      supporting multiple invindex simultaneously.
