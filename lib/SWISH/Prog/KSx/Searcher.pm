@@ -94,6 +94,9 @@ in SWISH::Prog::Searcher.
 Takes a KinoSearch::Search::SortSpec object, which will determine
 the sort order.
 
+TODO this should accept a simple string like the Native Searcher
+does.
+
 =item limit
 
 Takes an arrayref of arrayrefs. Each child arrayref should

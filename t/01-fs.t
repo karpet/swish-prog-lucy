@@ -36,7 +36,6 @@ is( $program->count, 2, "indexed test docs" );
 
 ok( my $searcher = SWISH::Prog::KSx::Searcher->new(
         invindex => 't/index.swish',
-        config   => 't/test.conf',
     ),
     "new searcher"
 );
