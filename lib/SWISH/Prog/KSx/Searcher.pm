@@ -10,6 +10,7 @@ use Carp;
 use SWISH::3;
 use SWISH::Prog::KSx::Results;
 use KinoSearch::Searcher;
+use KinoSearch::Search::PolySearcher;
 use KinoSearch::Analysis::PolyAnalyzer;
 use KinoSearch::QueryParser;
 use KinoSearch::Search::RangeQuery;
@@ -51,10 +52,20 @@ sub init {
     my $self = shift;
     $self->SUPER::init(@_);
 
-    my $invindex = $self->invindex;
+    # load meta from the first invindex
+    my $invindex = $self->invindex->[0];
     my $config   = $invindex->meta;
     my $lang     = $config->Index->{ SWISH::3::SWISH_INDEX_STEMMER_LANG() };
-    $self->{ks} = KinoSearch::Searcher->new( index => "$invindex" );
+
+    my @searchables;
+    for my $idx ( @{ $self->invindex } ) {
+        my $searcher = KinoSearch::Searcher->new( index => "$idx" );
+        push @searchables, $searcher;
+    }
+    $self->{ks} = KinoSearch::Search::PolySearcher->new(
+        schema      => $searchables[0]->get_schema,
+        searchables => \@searchables,
+    );
     $self->{analyzer}
         = KinoSearch::Analysis::PolyAnalyzer->new( language => $lang, );
     $self->{qp} = KinoSearch::QueryParser->new(
