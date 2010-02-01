@@ -44,6 +44,22 @@ Returns the title of the result document.
 
 sub title { $_[0]->{doc}->{swishtitle} }
 
+=head2 mtime
+
+Returns the last modified time of the result document.
+
+=cut
+
+sub mtime { $_[0]->{doc}->{swishlastmodified} }
+
+=head2 summary
+
+Returns the swishdescription of the result document.
+
+=cut
+
+sub summary { $_[0]->{doc}->{swishdescription} }
+
 =head2 get_property( I<PropertyName> )
 
 Returns the value for I<PropertyName>.
