@@ -10,8 +10,11 @@
   <date />
   <timestamp />
   <foobar /><!-- NO alias bar -->
+  <time alias_for="timestamp" />
  </MetaNames>
  <TagAlias>
   <swishdescription>foo</swishdescription>
  </TagAlias>
+ <!-- put everything in swishdefault field -->
+ <CascadeMetaContext>1</CascadeMetaContext>
 </swish>

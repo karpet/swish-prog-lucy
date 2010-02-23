@@ -18,6 +18,7 @@ use KinoSearch::Search::SortRule;
 use KinoSearch::Search::SortSpec;
 use Data::Dump qw( dump );
 use Sort::SQL;
+use Search::Query;
 
 =head1 NAME
 
@@ -82,6 +83,21 @@ sub init {
     );
     $self->{qp}->set_heed_colons(1);
 
+    my $fields    = {};
+    my $metanames = $config->MetaNames;
+    for my $metaname ( keys %$metanames ) {
+        $fields->{$metaname} = {};
+        if ( exists $metanames->{$metaname}->{alias_for} ) {
+            $fields->{$metaname}->{alias_for}
+                = $metanames->{$metaname}->{alias_for};
+        }
+    }
+    $self->{sqd} = Search::Query->parser(
+        dialect       => 'KSx',
+        default_field => 'swishdefault',
+        fields        => $fields,
+    );
+
     return $self;
 }
 
@@ -130,6 +146,10 @@ sub search {
     my $order  = $opts->{order};
     my $limits = $opts->{limit} || [];
 
+    # normalize Swish syntax
+    $query = $self->{sqd}->parse($query);
+
+    #warn "query=$query";
     my %hits_args = (
         query      => $self->{qp}->parse("$query"),
         offset     => $start,

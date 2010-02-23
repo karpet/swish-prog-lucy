@@ -34,4 +34,6 @@ Revision history for SWISH-Prog-KSx
 
 0.09    xxx
     * support sort by rank
+    * add Search::Query::Dialect::KSx support, for compat with Swish-e
+      query syntax.
 
