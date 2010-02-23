@@ -92,10 +92,12 @@ sub init {
                 = $metanames->{$metaname}->{alias_for};
         }
     }
+
+    # search all fields by default. $fields will be
+    # expanded with ORs for all terms not field: prefixed.
     $self->{sqd} = Search::Query->parser(
-        dialect       => 'KSx',
-        default_field => 'swishdefault',
-        fields        => $fields,
+        dialect => 'KSx',
+        fields  => $fields,
     );
 
     return $self;
@@ -150,6 +152,7 @@ sub search {
     $query = $self->{sqd}->parse($query);
 
     #warn "query=$query";
+
     my %hits_args = (
         query      => $self->{qp}->parse("$query"),
         offset     => $start,

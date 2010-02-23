@@ -15,6 +15,4 @@
  <TagAlias>
   <swishdescription>foo</swishdescription>
  </TagAlias>
- <!-- put everything in swishdefault field -->
- <CascadeMetaContext>1</CascadeMetaContext>
 </swish>

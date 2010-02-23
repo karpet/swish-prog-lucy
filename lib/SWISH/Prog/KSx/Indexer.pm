@@ -285,9 +285,12 @@ sub _handler {
         my $attr = $doc_prop_map->{$propname};
         $doc{$propname} = [ $data->doc->$attr ];
     }
-    my $props = $data->properties;
-    my $metas = $data->metanames;
-    for my $fname ( sort keys %{ $self->{_fields} } ) {
+    my $props  = $data->properties;
+    my $metas  = $data->metanames;
+    my $fields = $self->{_fields};
+
+    #dump $fields;
+    for my $fname ( sort keys %$fields ) {
         my $field = $self->{_fields}->{$fname};
 
         my @keys = keys %{ $field->{store_as} };
