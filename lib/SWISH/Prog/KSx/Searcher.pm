@@ -221,6 +221,7 @@ sub search {
     my $results = SWISH::Prog::KSx::Results->new(
         hits    => $hits->total_hits,
         ks_hits => $hits,
+        query   => $query,
     );
     $results->{_args} = \%hits_args;
     return $results;
