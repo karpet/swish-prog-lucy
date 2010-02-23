@@ -2,7 +2,7 @@ package SWISH::Prog::KSx::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 use base qw( SWISH::Prog::Searcher );
 
@@ -163,7 +163,21 @@ sub search {
             my $sort_array = Sort::SQL->parse($order);
             my @rules;
             for my $pair (@$sort_array) {
-                if ( uc( $pair->[1] ) eq 'DESC' ) {
+                my $type
+                    = $pair->[0] =~ m/^(swish)?rank$/ ? 'score' : 'field';
+
+                if ( $type eq 'score' and uc( $pair->[1] ) eq 'DESC' ) {
+                    push @rules,
+                        KinoSearch::Search::SortRule->new(
+                        type    => $type,
+                        reverse => 1,
+                        );
+                }
+                elsif ( $type eq 'score' ) {
+                    push @rules,
+                        KinoSearch::Search::SortRule->new( type => $type, );
+                }
+                elsif ( uc( $pair->[1] ) eq 'DESC' ) {
                     push @rules,
                         KinoSearch::Search::SortRule->new(
                         field   => $pair->[0],

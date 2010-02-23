@@ -68,8 +68,9 @@ while ( my $result2 = $results2->next ) {
 }
 
 # test sort
-ok( my $results3
-        = $searcher->search( 'some', { order => 'swishdocpath asc' } ),
+ok( my $results3 = $searcher->search(
+        'some', { order => 'swishdocpath asc swishrank desc' }
+    ),
     "search()"
 );
 is( $results3->hits, 2, "2 hits" );

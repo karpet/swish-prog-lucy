@@ -31,3 +31,7 @@ Revision history for SWISH-Prog-KSx
 0.08    22 Feb 2010
     * Indexer will now remove any existing doc with same 
       swishdocpath before calling add_doc().
+
+0.09    xxx
+    * support sort by rank
+
