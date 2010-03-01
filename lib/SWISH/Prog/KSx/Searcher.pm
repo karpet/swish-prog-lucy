@@ -77,7 +77,7 @@ sub init {
     $self->{qp} = Search::Query::Parser->new(
         dialect          => 'KSx',
         fields           => $field_names,
-        query_class_opts => { default_field => $field_names, },
+        query_class_opts => { default_field => $field_names, analyzer => $self->{analyzer}},
     );
 
     my $fields    = {};
@@ -111,7 +111,7 @@ The starting position. Default is 0.
 
 =item max
 
-The ending position. Default is max_hits() as documented 
+The ending position. Default is max_hits() as documented
 in SWISH::Prog::Searcher.
 
 =item order
@@ -214,7 +214,7 @@ sub search {
     }
 
     # turn the Search::Query object into a KS object
-    $hits_args{query} = $hits_args{query}->as_ks_query();
+    $hits_args{query} = $hits_args{query}->as_ks_query;
     my $hits    = $self->{ks}->hits(%hits_args);
     my $results = SWISH::Prog::KSx::Results->new(
         hits    => $hits->total_hits,
@@ -283,4 +283,3 @@ by the Free Software Foundation; or the Artistic License.
 See http://dev.perl.org/licenses/ for more information.
 
 =cut
-
