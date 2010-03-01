@@ -1,4 +1,4 @@
-use Test::More tests => 20;
+use Test::More tests => 22;
 use strict;
 use Data::Dump qw( dump );
 
@@ -79,6 +79,10 @@ while ( my $result3 = $results3->next ) {
     push @results, $result3->swishdocpath;
 }
 is_deeply( \@results, [qw( t/test.html t/test.xml )], "results sorted ok" );
+
+# test wildcard query
+ok( my $results4 = $searcher->search( 'som*' ), "search()" );
+is( $results4->hits, 2, "2 hits" );
 
 END {
     unless ( $ENV{PERL_DEBUG} ) {

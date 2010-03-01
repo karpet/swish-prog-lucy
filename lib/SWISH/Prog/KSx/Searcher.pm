@@ -12,13 +12,13 @@ use SWISH::Prog::KSx::Results;
 use KinoSearch::Searcher;
 use KinoSearch::Search::PolySearcher;
 use KinoSearch::Analysis::PolyAnalyzer;
-use KinoSearch::QueryParser;
 use KinoSearch::Search::RangeQuery;
 use KinoSearch::Search::SortRule;
 use KinoSearch::Search::SortSpec;
 use Data::Dump qw( dump );
 use Sort::SQL;
 use Search::Query;
+use Search::Query::Dialect::KSx;
 
 =head1 NAME
 
@@ -72,16 +72,13 @@ sub init {
     );
     $self->{analyzer}
         = KinoSearch::Analysis::PolyAnalyzer->new( language => $lang, );
-    $self->{qp} = KinoSearch::QueryParser->new(
 
-        # only need to explicitly declare fields if we do not want
-        # all the fields defined in schema.
-        #fields   => [ SWISH::3::SWISH_DOC_FIELDS(), 'swishdefault' ],
-        schema         => $self->{ks}->get_schema,
-        analyzer       => $self->{analyzer},
-        default_boolop => 'AND',                     # like swish-e
+    my $field_names = $self->{ks}->get_schema->all_fields();
+    $self->{qp} = Search::Query::Parser->new(
+        dialect          => 'KSx',
+        fields           => $field_names,
+        query_class_opts => { default_field => $field_names, },
     );
-    $self->{qp}->set_heed_colons(1);
 
     my $fields    = {};
     my $metanames = $config->MetaNames;
@@ -93,19 +90,15 @@ sub init {
         }
     }
 
-    # search all fields by default. $fields will be
-    # expanded with ORs for all terms not field: prefixed.
-    $self->{sqd} = Search::Query->parser(
-        dialect => 'KSx',
-        fields  => $fields,
-    );
-
     return $self;
 }
 
 =head2 search( I<query> [, I<opts> ] )
 
 Returns a SWISH::Prog::KSx::Results object.
+
+I<query> is assumed to be query string compatible
+with Search::Query::Dialect::KSx.
 
 I<opts> is an optional hashref with the following supported
 key/values:
@@ -148,13 +141,10 @@ sub search {
     my $order  = $opts->{order};
     my $limits = $opts->{limit} || [];
 
-    # normalize Swish syntax
-    $query = $self->{sqd}->parse($query);
-
     #warn "query=$query";
 
     my %hits_args = (
-        query      => $self->{qp}->parse("$query"),
+        query      => $self->{qp}->parse($query),
         offset     => $start,
         num_wanted => $max,
     );
@@ -168,8 +158,13 @@ sub search {
             lower_term => $limit->[1],
             upper_term => $limit->[2],
         );
-        $hits_args{query}
-            = $self->{qp}->make_and_query( [ $range, $hits_args{query} ] );
+        $hits_args{query}->add_and_clause(
+            Search::Query::Clause->new(
+                field => $limit->[0],
+                op    => '..',
+                value => [ $limit->[1], $limit->[2] ]
+            )
+        );
     }
 
     #carp dump $hits_args{query}->dump;
@@ -217,6 +212,9 @@ sub search {
                 = KinoSearch::Search::SortSpec->new( rules => \@rules, );
         }
     }
+
+    # turn the Search::Query object into a KS object
+    $hits_args{query} = $hits_args{query}->as_ks_query();
     my $hits    = $self->{ks}->hits(%hits_args);
     my $results = SWISH::Prog::KSx::Results->new(
         hits    => $hits->total_hits,
