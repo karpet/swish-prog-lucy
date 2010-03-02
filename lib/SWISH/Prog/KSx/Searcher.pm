@@ -59,25 +59,30 @@ sub init {
     # load meta from the first invindex
     my $invindex = $self->invindex->[0];
     my $config   = $invindex->meta;
-    my $lang     = $config->Index->{ SWISH::3::SWISH_INDEX_STEMMER_LANG() };
 
     my @searchables;
     for my $idx ( @{ $self->invindex } ) {
         my $searcher = KinoSearch::Searcher->new( index => "$idx" );
         push @searchables, $searcher;
     }
+    my $schema = $searchables[0]->get_schema;
     $self->{ks} = KinoSearch::Search::PolySearcher->new(
-        schema      => $searchables[0]->get_schema,
+        schema      => $schema,
         searchables => \@searchables,
     );
-    $self->{analyzer}
-        = KinoSearch::Analysis::PolyAnalyzer->new( language => $lang, );
 
-    my $field_names = $self->{ks}->get_schema->all_fields();
+    my $field_names = $schema->all_fields();
+    my %fieldtypes;
+    for my $name (@$field_names) {
+        $fieldtypes{$name} = {
+            type     => $schema->fetch_type($name),
+            analyzer => $schema->fetch_analyzer($name)
+        };
+    }
     $self->{qp} = Search::Query::Parser->new(
         dialect          => 'KSx',
-        fields           => $field_names,
-        query_class_opts => { default_field => $field_names, analyzer => $self->{analyzer}},
+        fields           => \%fieldtypes,
+        query_class_opts => { default_field => $field_names, }
     );
 
     my $fields    = {};

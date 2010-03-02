@@ -1,4 +1,4 @@
-use Test::More tests => 22;
+use Test::More tests => 24;
 use strict;
 use Data::Dump qw( dump );
 
@@ -81,8 +81,12 @@ while ( my $result3 = $results3->next ) {
 is_deeply( \@results, [qw( t/test.html t/test.xml )], "results sorted ok" );
 
 # test wildcard query
-ok( my $results4 = $searcher->search( 'som*' ), "search()" );
+ok( my $results4 = $searcher->search('S?M*'), "search()" );
 is( $results4->hits, 2, "2 hits" );
+
+ok( my $results5 = $searcher->search('running*'),
+    "search stemmable wildcard" );
+is( $results5->hits, 1, "1 hit" );
 
 END {
     unless ( $ENV{PERL_DEBUG} ) {
