@@ -66,10 +66,20 @@ sub init {
         push @searchables, $searcher;
     }
     my $schema = $searchables[0]->get_schema;
-    $self->{ks} = KinoSearch::Search::PolySearcher->new(
-        schema      => $schema,
-        searchables => \@searchables,
-    );
+
+    # API changed after 0.30_082 release.
+    eval {
+        $self->{ks} = KinoSearch::Search::PolySearcher->new(
+            schema    => $schema,
+            searchers => \@searchables,
+        );
+    };
+    if ($@) {
+        $self->{ks} = KinoSearch::Search::PolySearcher->new(
+            schema      => $schema,
+            searchables => \@searchables,
+        );
+    }
 
     my $field_names = $schema->all_fields();
     my %fieldtypes;
@@ -82,7 +92,10 @@ sub init {
     $self->{qp} = Search::Query::Parser->new(
         dialect          => 'KSx',
         fields           => \%fieldtypes,
-        query_class_opts => { default_field => $field_names, }
+        query_class_opts => {
+            default_field => $field_names,
+            debug         => $self->debug,
+        }
     );
 
     my $fields    = {};
