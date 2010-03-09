@@ -38,4 +38,5 @@ Revision history for SWISH-Prog-KSx
       query syntax.
 
 0.10    xxx
+    * fix bug with MetaNameAlias not being respected in query parsing.
 

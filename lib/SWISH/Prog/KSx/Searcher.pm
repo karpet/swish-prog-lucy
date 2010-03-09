@@ -81,15 +81,20 @@ sub init {
         );
     }
 
-    my $field_names = $schema->all_fields();
+    my $metanames   = $config->MetaNames;
+    my $field_names = [ keys %$metanames ];
     my %fieldtypes;
     for my $name (@$field_names) {
         $fieldtypes{$name} = {
             type     => $schema->fetch_type($name),
             analyzer => $schema->fetch_analyzer($name)
         };
+        if ( exists $metanames->{$name}->{alias_for} ) {
+            $fieldtypes{$name}->{alias_for}
+                = $metanames->{$name}->{alias_for};
+        }
     }
-    
+
     # TODO could expose 'qp' as param to new().
     $self->{qp} ||= Search::Query::Parser->new(
         dialect          => 'KSx',
@@ -99,16 +104,6 @@ sub init {
             debug         => $self->debug,
         }
     );
-
-    my $fields    = {};
-    my $metanames = $config->MetaNames;
-    for my $metaname ( keys %$metanames ) {
-        $fields->{$metaname} = {};
-        if ( exists $metanames->{$metaname}->{alias_for} ) {
-            $fields->{$metaname}->{alias_for}
-                = $metanames->{$metaname}->{alias_for};
-        }
-    }
 
     return $self;
 }
