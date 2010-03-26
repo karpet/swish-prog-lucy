@@ -67,19 +67,10 @@ sub init {
     }
     my $schema = $searchables[0]->get_schema;
 
-    # API changed after 0.30_08x release.
-    eval {
-        $self->{ks} = KinoSearch::Search::PolySearcher->new(
-            schema    => $schema,
-            searchers => \@searchables,
-        );
-    };
-    if ($@) {
-        $self->{ks} = KinoSearch::Search::PolySearcher->new(
-            schema      => $schema,
-            searchables => \@searchables,
-        );
-    }
+    $self->{ks} = KinoSearch::Search::PolySearcher->new(
+        schema    => $schema,
+        searchers => \@searchables,
+    );
 
     my $metanames   = $config->MetaNames;
     my $field_names = [ keys %$metanames ];
