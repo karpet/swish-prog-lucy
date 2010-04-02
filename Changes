@@ -41,3 +41,6 @@ Revision history for SWISH-Prog-KSx
     * fix bug with MetaNameAlias not being respected in query parsing.
     * KinoSearch 0.30_09 required.
 
+0.11    xxx
+    * pass Search::Query object into Results->query
+

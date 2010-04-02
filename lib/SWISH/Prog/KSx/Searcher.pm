@@ -2,7 +2,7 @@ package SWISH::Prog::KSx::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 use base qw( SWISH::Prog::Searcher );
 
@@ -220,12 +220,13 @@ sub search {
     }
 
     # turn the Search::Query object into a KS object
-    $hits_args{query} = $hits_args{query}->as_ks_query;
+    my $parsed_query = $hits_args{query};
+    $hits_args{query} = $parsed_query->as_ks_query;
     my $hits    = $self->{ks}->hits(%hits_args);
     my $results = SWISH::Prog::KSx::Results->new(
         hits    => $hits->total_hits,
         ks_hits => $hits,
-        query   => $query,
+        query   => $parsed_query,
     );
     $results->{_args} = \%hits_args;
     return $results;
