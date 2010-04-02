@@ -149,8 +149,9 @@ sub search {
 
     #warn "query=$query";
 
+    my $parsed_query = $self->{qp}->parse($query)
+        or croak "Query syntax error: " . $self->{qp}->errstr;
     my %hits_args = (
-        query      => $self->{qp}->parse($query),
         offset     => $start,
         num_wanted => $max,
     );
@@ -164,7 +165,7 @@ sub search {
             lower_term => $limit->[1],
             upper_term => $limit->[2],
         );
-        $hits_args{query}->add_and_clause(
+        $parsed_query->add_and_clause(
             Search::Query::Clause->new(
                 field => $limit->[0],
                 op    => '..',
@@ -220,7 +221,6 @@ sub search {
     }
 
     # turn the Search::Query object into a KS object
-    my $parsed_query = $hits_args{query};
     $hits_args{query} = $parsed_query->as_ks_query;
     my $hits    = $self->{ks}->hits(%hits_args);
     my $results = SWISH::Prog::KSx::Results->new(
