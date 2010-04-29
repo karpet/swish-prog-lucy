@@ -150,7 +150,7 @@ sub search {
     #warn "query=$query";
 
     my $parsed_query = $self->{qp}->parse($query)
-        or croak "Query syntax error: " . $self->{qp}->errstr;
+        or croak "Query syntax error: " . $self->{qp}->error;
     my %hits_args = (
         offset     => $start,
         num_wanted => $max,
