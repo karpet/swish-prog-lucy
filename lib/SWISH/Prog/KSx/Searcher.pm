@@ -160,11 +160,6 @@ sub search {
         if ( !ref $limit or ref($limit) ne 'ARRAY' or @$limit != 3 ) {
             croak "poorly-formed limit. should be an array ref of 3 values.";
         }
-        my $range = KinoSearch::Search::RangeQuery->new(
-            field      => $limit->[0],
-            lower_term => $limit->[1],
-            upper_term => $limit->[2],
-        );
         $parsed_query->add_and_clause(
             Search::Query::Clause->new(
                 field => $limit->[0],
