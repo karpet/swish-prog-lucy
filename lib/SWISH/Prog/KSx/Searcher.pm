@@ -12,7 +12,6 @@ use SWISH::Prog::KSx::Results;
 use KinoSearch::Searcher;
 use KinoSearch::Search::PolySearcher;
 use KinoSearch::Analysis::PolyAnalyzer;
-use KinoSearch::Search::RangeQuery;
 use KinoSearch::Search::SortRule;
 use KinoSearch::Search::SortSpec;
 use Data::Dump qw( dump );

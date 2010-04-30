@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Test::More tests => 27;
+use Test::More tests => 29;
 use strict;
 use Data::Dump qw( dump );
 
@@ -92,7 +92,11 @@ ok( my $results5 = $searcher->search('running*'),
 is( $results5->hits, 1, "1 hit" );
 
 ok( my $results6 = $searcher->search(qq/"text here"~4/), "search proximity" );
-is( $results->hits, 1, "1 hit" );
+is( $results6->hits, 1, "1 hit" );
+
+ok( my $results7 = $searcher->search(qq/(som* or word*) and here/),
+    "compound wildcard" );
+is( $results7->hits, 2, "2 hits for compound wildcard query" );
 
 # break the query parser
 eval { my $results7 = $searcher->search(qq/"out touch~2/); };
