@@ -187,14 +187,11 @@ sub search {
 
                 if ( $type eq 'score' and uc( $pair->[1] ) eq 'DESC' ) {
                     push @rules,
-                        KinoSearch::Search::SortRule->new(
-                        type    => $type,
-                        reverse => 1,
-                        );
+                        KinoSearch::Search::SortRule->new( type => $type );
                 }
                 elsif ( $type eq 'score' ) {
                     push @rules,
-                        KinoSearch::Search::SortRule->new( type => $type, );
+                        KinoSearch::Search::SortRule->new( type => $type, reverse => 1 );
                 }
                 elsif ( uc( $pair->[1] ) eq 'DESC' ) {
                     push @rules,
