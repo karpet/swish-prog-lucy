@@ -2,7 +2,7 @@ package SWISH::Prog::KSx::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 use base qw( SWISH::Prog::Searcher );
 
@@ -178,6 +178,8 @@ sub search {
         }
         else {
 
+            my $has_sort_by_score = 0;
+
             # turn it into a SortSpec
             my $sort_array = Sort::SQL->parse($order);
             my @rules;
@@ -185,13 +187,22 @@ sub search {
                 my $type
                     = $pair->[0] =~ m/^(swish)?rank$/ ? 'score' : 'field';
 
-                if ( $type eq 'score' and uc( $pair->[1] ) eq 'DESC' ) {
-                    push @rules,
-                        KinoSearch::Search::SortRule->new( type => $type );
-                }
-                elsif ( $type eq 'score' ) {
-                    push @rules,
-                        KinoSearch::Search::SortRule->new( type => $type, reverse => 1 );
+                if ( $type eq 'score' ) {
+
+                    $has_sort_by_score++;
+
+                    if ( uc( $pair->[1] ) eq 'DESC' ) {
+                        push @rules,
+                            KinoSearch::Search::SortRule->new(
+                            type => $type );
+                    }
+                    else {
+                        push @rules,
+                            KinoSearch::Search::SortRule->new(
+                            type    => $type,
+                            reverse => 1
+                            );
+                    }
                 }
                 elsif ( uc( $pair->[1] ) eq 'DESC' ) {
                     push @rules,
@@ -206,6 +217,13 @@ sub search {
                         field => $pair->[0], );
                 }
             }
+
+            # always include a sort by score so that we calculate a score.
+            if ( !$has_sort_by_score ) {
+                push @rules,
+                    KinoSearch::Search::SortRule->new( type => 'score' );
+            }
+            
             $hits_args{sort_spec}
                 = KinoSearch::Search::SortSpec->new( rules => \@rules, );
         }
