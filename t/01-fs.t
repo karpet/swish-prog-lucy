@@ -4,6 +4,10 @@ use warnings;
 use Test::More tests => 32;
 use strict;
 use Data::Dump qw( dump );
+use Search::Tools::UTF8;
+
+#binmode Test::More->builder->output,         ":utf8";
+#binmode Test::More->builder->failure_output, ":utf8";
 
 use_ok('SWISH::Prog');
 use_ok('SWISH::Prog::KSx::InvIndex');
@@ -63,11 +67,28 @@ ok( my $results2 = $searcher->search(
     "search()"
 );
 is( $results2->hits, 1, "1 hit" );
+
+my $utf8_title = sprintf( "%c%s%c", 8220, qq/ima xml doc/, 8221 );
+
+#Search::Tools::describe($utf8_title);
+#diag($utf8_title);
+
 while ( my $result2 = $results2->next ) {
-    diag( $result2->uri );
-    is( $result2->uri,   't/test.xml',  'get uri' );
-    is( $result2->title, "ima xml doc", "get title" );
-    diag( $result2->score );
+    my $title = sprintf( "%s %s", $result2->title, "AND MORE" );
+
+    #print STDERR $title . "\n";
+    if ( !is_flagged_utf8($title) ) {
+        warn("not flagged utf8");
+    }
+
+    #Search::Tools::describe($title);
+    #diag( $result2->uri );
+    #diag( $result2->title );
+    #diag( $result2->score );
+    #diag($title);
+    is( $result2->uri,   't/test.xml', 'get uri' );
+    is( $result2->title, $utf8_title,  "get title" );
+
 }
 
 # test sort

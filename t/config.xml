@@ -5,6 +5,7 @@
   <bar alias_for="foobar" />
   <date />
   <timestamp />
+  <title alias_for="swishtitle" />
  </PropertyNames>
  <MetaNames>
   <date bias="10" />

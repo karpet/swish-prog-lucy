@@ -17,6 +17,7 @@ use Carp;
 use SWISH::3 qw( :constants );
 use Scalar::Util qw( blessed );
 use Data::Dump qw( dump );
+use Search::Tools::UTF8;
 
 =head1 NAME
 
@@ -107,11 +108,11 @@ sub init {
 
     my $metanames = $config->get_metanames;
     for my $name ( @{ $metanames->keys } ) {
-        my $mn = $metanames->get($name);
+        my $mn    = $metanames->get($name);
         my $alias = $mn->alias_for;
         $fields{$name}->{is_meta}       = 1;
         $fields{$name}->{is_meta_alias} = $alias;
-        $fields{$name}->{bias} = $mn->bias;
+        $fields{$name}->{bias}          = $mn->bias;
     }
 
     my $properties = $config->get_properties;
@@ -287,7 +288,7 @@ sub _handler {
 
     # serialize the doc with our tokenpos_bump char
     for my $k ( keys %doc ) {
-        $doc{$k} = join( "\003", @{ $doc{$k} } );
+        $doc{$k} = to_utf8( join( "\003", @{ $doc{$k} } ) );
     }
 
     #warn dump \%doc;
