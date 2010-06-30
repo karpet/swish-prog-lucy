@@ -53,3 +53,8 @@ Revision history for SWISH-Prog-KSx
 0.13    22 June 2010
     * add default_boolop to Searcher.
 
+0.14    xxx
+    * fix bug where Doc values were not being flagged as UTF-8 in
+      Indexer.
+
+
