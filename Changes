@@ -58,5 +58,7 @@ Revision history for SWISH-Prog-KSx
       Indexer.
     * fix bug where built-in PropertyNames were not being allowed
       to be both MetaNames and PropertyNames
+    * add ability to sort by PropertyNameAlias values, like native
+      Swish-e 2.x can.
 
 
