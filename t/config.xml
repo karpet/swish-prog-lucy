@@ -12,6 +12,7 @@
   <timestamp />
   <foobar /><!-- NO alias bar -->
   <time alias_for="timestamp" />
+  <swishlastmodified />
  </MetaNames>
  <TagAlias>
   <swishdescription>foo</swishdescription>

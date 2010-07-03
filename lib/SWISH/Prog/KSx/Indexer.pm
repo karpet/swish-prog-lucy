@@ -106,6 +106,8 @@ sub init {
     # build the KS fields, which are a merger of MetaNames+PropertyNames
     my %fields;
 
+    my $built_in_props = SWISH_DOC_PROP_MAP();
+
     my $metanames = $config->get_metanames;
     for my $name ( @{ $metanames->keys } ) {
         my $mn    = $metanames->get($name);
@@ -113,10 +115,17 @@ sub init {
         $fields{$name}->{is_meta}       = 1;
         $fields{$name}->{is_meta_alias} = $alias;
         $fields{$name}->{bias}          = $mn->bias;
+        if ( exists $built_in_props->{$name} ) {
+            $fields{$name}->{is_prop} = 1;
+        }
     }
 
     my $properties = $config->get_properties;
     for my $name ( @{ $properties->keys } ) {
+        if ( exists $built_in_props->{$name} ) {
+            croak
+                "$name is a built-in PropertyName and should not be defined in config";
+        }
         my $property = $properties->get($name);
         my $alias    = $property->alias_for;
         $fields{$name}->{is_prop}       = 1;
@@ -219,10 +228,22 @@ sub init {
         $field->{store_as}->{$name} = 1;
     }
 
-    my $built_in_props = SWISH_DOC_PROP_MAP();
-    for my $d ( keys %$built_in_props ) {
-        unless ( exists $fields{$d} ) {
-            $schema->spec_field( name => $d, type => $property_only );
+    for my $name ( keys %$built_in_props ) {
+        if ( exists $fields{$name} ) {
+            my $field = $fields{$name};
+
+            #carp "found $name in built-in props: " . dump($field);
+
+            # in theory this should never happen.
+            if ( !$field->{is_prop} ) {
+                croak
+                    "$name is a built-in PropertyName but not defined as a PropertyName in config";
+            }
+        }
+
+        # default property
+        else {
+            $schema->spec_field( name => $name, type => $property_only );
         }
     }
 
