@@ -6,6 +6,7 @@
   <date />
   <timestamp />
   <title alias_for="swishtitle" />
+  <lastmod alias_for="swishlastmodified" />
  </PropertyNames>
  <MetaNames>
   <date bias="10" />

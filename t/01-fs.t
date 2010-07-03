@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Test::More tests => 32;
+use Test::More tests => 34;
 use strict;
 use Data::Dump qw( dump );
 use Search::Tools::UTF8;
@@ -134,6 +134,24 @@ ok( my $results_AND
 );
 cmp_ok( $results_OR->hits, '>', $results_AND->hits,
     "OR gives more hits than AND" );
+
+# properties/aliases
+ok( my $sorted_by_title = $searcher->search( qq/some/, { order => 'title' } ),
+    "search sorted by title"
+);
+show_results_by_uri($sorted_by_title);
+ok( my $sorted_by_lastmod
+        = $searcher->search( qq/some/, { order => 'lastmod' } ),
+    "search sorted by lastmod"
+);
+show_results_by_uri($sorted_by_lastmod);
+
+sub show_results_by_uri {
+    my ($results) = @_;
+    while ( my $r = $results->next ) {
+        diag( $r->uri );
+    }
+}
 
 END {
     unless ( $ENV{PERL_DEBUG} ) {
