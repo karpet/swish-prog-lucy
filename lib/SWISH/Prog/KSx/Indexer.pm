@@ -116,7 +116,8 @@ sub init {
         $fields{$name}->{is_meta_alias} = $alias;
         $fields{$name}->{bias}          = $mn->bias;
         if ( exists $built_in_props->{$name} ) {
-            $fields{$name}->{is_prop} = 1;
+            $fields{$name}->{is_prop}  = 1;
+            $fields{$name}->{sortable} = 1;
         }
     }
 
