@@ -290,8 +290,12 @@ sub _handler {
     my $fields = $self->{_fields};
 
     #dump $fields;
+    #dump $props;
+    #dump $metas;
     for my $fname ( sort keys %$fields ) {
         my $field = $self->{_fields}->{$fname};
+        next if $field->{is_prop_alias};
+        next if $field->{is_meta_alias};
 
         my @keys = keys %{ $field->{store_as} };
 
@@ -301,7 +305,7 @@ sub _handler {
             # properties have verbatim flag, which affects
             # the stored whitespace.
         
-            if ( $field->{is_prop} ) {
+            if ( $field->{is_prop} and !exists $doc_prop_map->{$fname} ) {
                 push( @{ $doc{$key} }, @{ $props->{$fname} } );
             }
             elsif ( $field->{is_meta} ) {
