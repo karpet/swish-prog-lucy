@@ -60,5 +60,6 @@ Revision history for SWISH-Prog-KSx
       to be both MetaNames and PropertyNames
     * add ability to sort by PropertyNameAlias values, like native
       Swish-e 2.x can.
-
+    * switch field indexing order to prefer PropertyNames over
+      MetaNames because of how whitespace is stored (or not).
 

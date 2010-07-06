@@ -296,11 +296,16 @@ sub _handler {
         my @keys = keys %{ $field->{store_as} };
 
         for my $key (@keys) {
-            if ( $field->{is_meta} ) {
-                push( @{ $doc{$key} }, @{ $metas->{$fname} } );
-            }
-            elsif ( $field->{is_prop} ) {
+        
+            # prefer properties over metanames because
+            # properties have verbatim flag, which affects
+            # the stored whitespace.
+        
+            if ( $field->{is_prop} ) {
                 push( @{ $doc{$key} }, @{ $props->{$fname} } );
+            }
+            elsif ( $field->{is_meta} ) {
+                push( @{ $doc{$key} }, @{ $metas->{$fname} } );
             }
             else {
                 croak "field '$fname' is neither a PropertyName nor MetaName";
