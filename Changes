@@ -63,3 +63,6 @@ Revision history for SWISH-Prog-KSx
     * switch field indexing order to prefer PropertyNames over
       MetaNames because of how whitespace is stored (or not).
 
+0.15    xxx
+    * bump SWISH::3 dependency to 0.09
+
