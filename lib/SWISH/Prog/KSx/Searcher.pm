@@ -92,6 +92,7 @@ sub init {
     my %propnames = map { $_ => { alias_for => undef } }
         keys %{ SWISH_DOC_PROP_MAP() };
     $propnames{swishrank} = { alias_for => undef };
+    $propnames{score}     = { alias_for => undef };
     for my $name ( keys %$props ) {
         $propnames{$name} = { alias_for => undef };
         if ( exists $props->{$name}->{alias_for} ) {
@@ -232,7 +233,13 @@ sub search {
                 if ( $self->_get_field_alias_for($field) ) {
                     $field = $self->_get_field_alias_for($field);
                 }
-                my $type = $field =~ m/^(swish)?rank$/ ? 'score' : 'field';
+                my $type;
+                if ( $field eq 'score' or $field =~ m/^(swish)?rank$/ ) {
+                    $type = 'score';
+                }
+                else {
+                    $type = 'field';
+                }
 
                 if ( $type eq 'score' ) {
 
