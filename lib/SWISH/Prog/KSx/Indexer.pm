@@ -7,8 +7,8 @@ our $VERSION = '0.16';
 use base qw( SWISH::Prog::Indexer );
 use SWISH::Prog::KSx::InvIndex;
 
-use KinoSearch::Indexer;
-use KinoSearch::Schema;
+use KinoSearch::Index::Indexer;
+use KinoSearch::Plan::Schema;
 use KinoSearch::Analysis::PolyAnalyzer;
 use KinoSearch::FieldType::FullTextType;
 use KinoSearch::FieldType::StringType;
