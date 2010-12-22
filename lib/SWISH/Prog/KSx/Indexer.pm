@@ -18,6 +18,7 @@ use SWISH::3 qw( :constants );
 use Scalar::Util qw( blessed );
 use Data::Dump qw( dump );
 use Search::Tools::UTF8;
+use Path::Class::File::Lockable;
 
 =head1 NAME
 
@@ -300,11 +301,11 @@ sub _handler {
         my @keys = keys %{ $field->{store_as} };
 
         for my $key (@keys) {
-        
+
             # prefer properties over metanames because
             # properties have verbatim flag, which affects
             # the stored whitespace.
-        
+
             if ( $field->{is_prop} and !exists $doc_prop_map->{$fname} ) {
                 push( @{ $doc{$key} }, @{ $props->{$fname} } );
             }
@@ -346,6 +347,21 @@ sub finish {
 
     return 0 if $self->{_is_finished};
 
+    # get a lock on our header file till
+    # this entire transaction is complete.
+    # Note that we trust the KS locking feature
+    # to have prevented any other process
+    # from getting a lock on the invindex itself,
+    # but we want to make sure nothing interrupts
+    # us from writing our own header after calling ->commit().
+    my $header
+        = $self->invindex->path->file( SWISH_HEADER_FILE() )->stringify;
+    my $lock_file = Path::Class::File::Lockable->new($header);
+    if ( $lock_file->locked ) {
+        croak "Lock file found on $header -- cannot commit indexing changes";
+    }
+    $lock_file->lock;
+
     # commit our changes
     $self->{ks}->commit();
 
@@ -356,8 +372,10 @@ sub finish {
     $index->set( SWISH_INDEX_FORMAT(),       'KSx' );
     $index->set( SWISH_INDEX_STEMMER_LANG(), $self->{_lang} );
 
-    $self->{s3}->config->write(
-        $self->invindex->path->file( SWISH_HEADER_FILE() )->stringify );
+    $self->{s3}->config->write($header);
+
+    # transaction complete
+    $lock_file->unlock;
 
     $self->{s3} = undef;    # invalidate this indexer
 

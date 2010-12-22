@@ -27,6 +27,8 @@ WriteMakefile(
         'Sort::SQL'     => 0.06,
         'Search::Query' => 0.17,
         'Search::Query::Dialect::KSx' => 0.12,
+        'Path::Class::File::Lockable' => 0,
+        'Path::Class::File::Stat' => 0,
     },
     dist => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'SWISH-Prog-KSx-* t/index.swish' },

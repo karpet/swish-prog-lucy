@@ -14,6 +14,7 @@ use KinoSearch::Search::PolySearcher;
 use KinoSearch::Analysis::PolyAnalyzer;
 use KinoSearch::Search::SortRule;
 use KinoSearch::Search::SortSpec;
+use Path::Class::File::Stat;
 use Data::Dump qw( dump );
 use Sort::SQL;
 use Search::Query;
@@ -59,17 +60,20 @@ sub init {
     my $invindex = $self->invindex->[0];
     my $config   = $invindex->meta;
 
+    # cache the meta file stat(), to test if it changes
+    # while the searcher is open. See _get_ks()
+    $self->{swish_xml}
+        = Path::Class::File::Stat->new( $invindex->meta->file );
+
     my @searchables;
     for my $idx ( @{ $self->invindex } ) {
         my $searcher = KinoSearch::Searcher->new( index => "$idx" );
         push @searchables, $searcher;
     }
     my $schema = $searchables[0]->get_schema;
-
-    $self->{ks} = KinoSearch::Search::PolySearcher->new(
-        schema    => $schema,
-        searchers => \@searchables,
-    );
+    $self->{_schema}      = $schema;
+    $self->{_searchables} = \@searchables;
+    $self->_get_ks();
 
     my $metanames   = $config->MetaNames;
     my $field_names = [ keys %$metanames ];
@@ -297,7 +301,7 @@ sub search {
 
     # turn the Search::Query object into a KS object
     $hits_args{query} = $parsed_query->as_ks_query;
-    my $hits    = $self->{ks}->hits(%hits_args);
+    my $hits    = $self->_get_ks->hits(%hits_args);
     my $results = SWISH::Prog::KSx::Results->new(
         hits    => $hits->total_hits,
         ks_hits => $hits,
@@ -305,6 +309,19 @@ sub search {
     );
     $results->{_args} = \%hits_args;
     return $results;
+}
+
+sub _get_ks {
+    my $self = shift;
+    if ( !$self->{ks} or $self->{swish_xml}->changed ) {
+        $self->{ks} = KinoSearch::Search::PolySearcher->new(
+            schema    => $self->{_schema},
+            searchers => $self->{_searchables},
+        );
+
+        #warn "opening new PolySearcher";
+    }
+    return $self->{ks};
 }
 
 1;
