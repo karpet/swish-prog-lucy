@@ -252,7 +252,7 @@ sub init {
     #dump( \%fields );
 
     # TODO can pass ks in?
-    $self->{ks} ||= KinoSearch::Indexer->new(
+    $self->{ks} ||= KinoSearch::Index::Indexer->new(
         schema => $schema,
         index  => $self->invindex->path,
         create => 1,
@@ -323,7 +323,7 @@ sub _handler {
         $doc{$k} = to_utf8( join( "\003", @{ $doc{$k} } ) );
     }
 
-    #warn dump \%doc;
+    $self->debug and carp dump \%doc;
 
     # make sure we delete any existing doc with same URI
     $self->{ks}->delete_by_term(
@@ -342,6 +342,8 @@ method.
 
 =cut
 
+my @chars = ( 'a' .. 'z', 'A' .. 'Z', 0 .. 9 );
+
 sub finish {
     my $self = shift;
 
@@ -354,8 +356,8 @@ sub finish {
     # from getting a lock on the invindex itself,
     # but we want to make sure nothing interrupts
     # us from writing our own header after calling ->commit().
-    my $header
-        = $self->invindex->path->file( SWISH_HEADER_FILE() )->stringify;
+    my $invindex  = $self->invindex->path;
+    my $header    = $invindex->file( SWISH_HEADER_FILE() )->stringify;
     my $lock_file = Path::Class::File::Lockable->new($header);
     if ( $lock_file->locked ) {
         croak "Lock file found on $header -- cannot commit indexing changes";
@@ -365,23 +367,47 @@ sub finish {
     # commit our changes
     $self->{ks}->commit();
 
+    # get total doc count
+    my $polyreader
+        = KinoSearch::Index::PolyReader->open( index => "$invindex", );
+    my $doc_count = $polyreader->doc_count();
+
     # write header
     my $index = $self->{s3}->config->get_index;
 
-    $index->set( SWISH_INDEX_NAME(),         $self->invindex->path );
+    # poor man's uuid
+    my $uuid = join( "", @chars[ map { rand @chars } ( 1 .. 24 ) ] );
+
+    $index->set( SWISH_INDEX_NAME(),         "$invindex" );
     $index->set( SWISH_INDEX_FORMAT(),       'KSx' );
     $index->set( SWISH_INDEX_STEMMER_LANG(), $self->{_lang} );
+    $index->set( "DocCount",                 $doc_count );
+    $index->set( "UUID",                     $uuid );
 
     $self->{s3}->config->write($header);
 
     # transaction complete
     $lock_file->unlock;
 
+    $self->debug and carp "wrote $header with $uuid";
+
     $self->{s3} = undef;    # invalidate this indexer
 
     $self->SUPER::finish(@_);
 
     $self->{_is_finished} = 1;
+
+    return $doc_count;
+}
+
+=head2 get_ks
+
+Returns the internal KinoSearch::Index::Indexer object.
+
+=cut
+
+sub get_ks {
+    return shift->{ks};
 }
 
 1;

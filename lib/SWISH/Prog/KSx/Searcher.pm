@@ -61,19 +61,14 @@ sub init {
     my $config   = $invindex->meta;
 
     # cache the meta file stat(), to test if it changes
-    # while the searcher is open. See _get_ks()
+    # while the searcher is open. See get_ks()
     $self->{swish_xml}
         = Path::Class::File::Stat->new( $invindex->meta->file );
+    $self->{swish_xml}->use_md5();    # slower but better
+    $self->{_uuid} = $config->Index->{UUID};
 
-    my @searchables;
-    for my $idx ( @{ $self->invindex } ) {
-        my $searcher = KinoSearch::Searcher->new( index => "$idx" );
-        push @searchables, $searcher;
-    }
-    my $schema = $searchables[0]->get_schema;
-    $self->{_schema}      = $schema;
-    $self->{_searchables} = \@searchables;
-    $self->_get_ks();
+    $self->get_ks();
+    my $schema = $self->{_schema};
 
     my $metanames   = $config->MetaNames;
     my $field_names = [ keys %$metanames ];
@@ -116,6 +111,16 @@ sub init {
     );
 
     return $self;
+}
+
+sub _get_searchables {
+    my $self = shift;
+    my @searchables;
+    for my $idx ( @{ $self->invindex } ) {
+        my $searcher = KinoSearch::Searcher->new( index => "$idx" );
+        push @searchables, $searcher;
+    }
+    return \@searchables;
 }
 
 sub _get_field_alias_for {
@@ -301,7 +306,10 @@ sub search {
 
     # turn the Search::Query object into a KS object
     $hits_args{query} = $parsed_query->as_ks_query;
-    my $hits    = $self->_get_ks->hits(%hits_args);
+    my $ks = $self->get_ks();
+    $self->debug
+        and carp "search in $ks for '$parsed_query' : " . dump( \%hits_args );
+    my $hits    = $ks->hits(%hits_args);
     my $results = SWISH::Prog::KSx::Results->new(
         hits    => $hits->total_hits,
         ks_hits => $hits,
@@ -311,17 +319,49 @@ sub search {
     return $results;
 }
 
-sub _get_ks {
-    my $self = shift;
-    if ( !$self->{ks} or $self->{swish_xml}->changed ) {
-        $self->{ks} = KinoSearch::Search::PolySearcher->new(
-            schema    => $self->{_schema},
-            searchers => $self->{_searchables},
-        );
+=head2 get_ks
 
-        #warn "opening new PolySearcher";
+Returns the internal KinoSearch::Search::PolySearcher object.
+
+=cut
+
+sub get_ks {
+    my $self = shift;
+    my $uuid = $self->invindex->[0]->meta->Index->{UUID};
+    if ( !$self->{ks} ) {
+
+        $self->debug and carp "init ks";
+        $self->_open_ks;
+
+    }
+    elsif ( $self->{_uuid} && $self->{_uuid} ne $uuid ) {
+
+        $self->debug and carp "UUID has changed from $self->{_uuid} to $uuid";
+        $self->_open_ks;
+
+        # recache
+        $self->{_uuid} = $self->invindex->[0]->meta->Index->{UUID};
+
+    }
+    elsif ( $self->{swish_xml}->changed ) {
+
+        $self->debug and carp "MD5 sig has changed";
+        $self->_open_ks;
+
     }
     return $self->{ks};
+}
+
+sub _open_ks {
+    my $self = shift;
+    $self->{_searchables} = $self->_get_searchables;
+    $self->{_schema}      = $self->{_searchables}->[0]->get_schema;
+    $self->{ks}           = KinoSearch::Search::PolySearcher->new(
+        schema    => $self->{_schema},
+        searchers => $self->{_searchables},
+    );
+
+    $self->debug and carp "opened new PolySearcher: " . $self->{ks};
 }
 
 1;
