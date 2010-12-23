@@ -67,8 +67,10 @@ sub init {
     $self->{swish_xml}->use_md5();    # slower but better
     $self->{_uuid} = $config->Index->{UUID};
 
-    $self->get_ks();
-    my $schema = $self->{_schema};
+    # this does 2 things:
+    # 1: initializes the KS Searcher
+    # 2: gives a copy of the KS Schema object for field defs
+    my $schema = $self->get_ks()->get_schema();
 
     my $metanames   = $config->MetaNames;
     my $field_names = [ keys %$metanames ];
@@ -111,16 +113,6 @@ sub init {
     );
 
     return $self;
-}
-
-sub _get_searchables {
-    my $self = shift;
-    my @searchables;
-    for my $idx ( @{ $self->invindex } ) {
-        my $searcher = KinoSearch::Searcher->new( index => "$idx" );
-        push @searchables, $searcher;
-    }
-    return \@searchables;
 }
 
 sub _get_field_alias_for {
@@ -354,11 +346,18 @@ sub get_ks {
 
 sub _open_ks {
     my $self = shift;
-    $self->{_searchables} = $self->_get_searchables;
-    $self->{_schema}      = $self->{_searchables}->[0]->get_schema;
-    $self->{ks}           = KinoSearch::Search::PolySearcher->new(
-        schema    => $self->{_schema},
-        searchers => $self->{_searchables},
+    my @searchers;
+    for my $idx ( @{ $self->invindex } ) {
+        my $searcher = KinoSearch::Searcher->new( index => "$idx" );
+        push @searchers, $searcher;
+    }
+
+    # assume all the schemas are identical.
+    my $schema = $searchers[0]->get_schema();
+
+    $self->{ks} = KinoSearch::Search::PolySearcher->new(
+        schema    => $schema,
+        searchers => \@searchers,
     );
 
     $self->debug and carp "opened new PolySearcher: " . $self->{ks};
