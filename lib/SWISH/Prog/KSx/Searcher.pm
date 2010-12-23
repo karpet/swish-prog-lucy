@@ -65,7 +65,7 @@ sub init {
     $self->{swish_xml}
         = Path::Class::File::Stat->new( $invindex->meta->file );
     $self->{swish_xml}->use_md5();    # slower but better
-    $self->{_uuid} = $config->Index->{UUID};
+    $self->{_uuid} = $config->Index->{UUID} || "KS_NO_UUID";
 
     # this does 2 things:
     # 1: initializes the KS Searcher
@@ -339,6 +339,11 @@ sub get_ks {
 
         $self->debug and carp "MD5 sig has changed";
         $self->_open_ks;
+
+    }
+    else {
+
+        $self->debug and carp "re-using cached KS Searcher";
 
     }
     return $self->{ks};
