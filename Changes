@@ -76,4 +76,5 @@ Revision history for SWISH-Prog-KSx
     * add Path::Class::File::Stat to automatically re-open 
       the internal KS searcher inside a S::P::KSx::Searcher 
       if the invindex has been modified while the searcher was open.
+    * add support for UndefinedMetaTags and UndefinedXMLAttributes
 

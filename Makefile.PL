@@ -23,7 +23,7 @@ WriteMakefile(
         'Test::More'    => 0,
         'KinoSearch'    => '0.31',    
         'SWISH::Prog'   => 0.44,         
-        'SWISH::3'      => 0.09, 
+        'SWISH::3'      => 0.11, 
         'Sort::SQL'     => 0.06,
         'Search::Query' => 0.17,
         'Search::Query::Dialect::KSx' => 0.12,

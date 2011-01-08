@@ -258,7 +258,58 @@ sub init {
         create => 1,
     );
 
+    # cache our objects in case we later
+    # need to create any fields on-the-fly
+    $self->{__ks}->{analyzer} = $analyzer;
+    $self->{__ks}->{schema}   = $schema;
+
     return $self;
+}
+
+sub _add_new_field {
+    my ( $self, $metaname ) = @_;
+    my $fields = $self->{_fields};
+    my $alias  = $metaname->alias_for;
+    my $name   = $metaname->name;
+    if ( !exists $fields->{$name} ) {
+        $fields->{$name} = {};
+    }
+    my $field = $fields->{$name};
+    $field->{is_meta}           = 1;
+    $field->{is_meta_alias}     = $alias;
+    $field->{bias}              = $metaname->bias;
+    $field->{store_as}->{$name} = 1;
+
+    # a newly defined MetaName matching an already-defined PropertyName
+    if ( $field->{is_prop} ) {
+        $self->{__ks}->{schema}->spec_field(
+            name => $name,
+            type => KinoSearch::FieldType::FullTextType->new(
+                analyzer      => $self->{__ks}->{analyzer},
+                highlightable => 1,
+                sortable      => $field->{sortable},
+                boost         => $field->{bias} || 1.0,
+            ),
+        );
+    }
+
+    # just a new MetaName
+    else {
+
+        $self->{__ks}->{schema}->spec_field(
+            name => $name,
+            type => KinoSearch::FieldType::FullTextType->new(
+                analyzer => $self->{__ks}->{analyzer},
+                stored   => 0,
+                boost    => $field->{bias} || 1.0,
+            ),
+        );
+
+    }
+
+    #warn "Added new field $name: " . dump( $field );
+
+    return $field;
 }
 
 =head2 process( I<doc> )
@@ -275,20 +326,39 @@ sub process {
     return $doc;
 }
 
+my $doc_prop_map = SWISH_DOC_PROP_MAP();
+
 sub _handler {
     my ( $self, $data ) = @_;
     my $config     = $data->config;
     my $conf_props = $config->get_properties;
     my $conf_metas = $config->get_metanames;
+
+    # will hold all the parsed text, keyed by field name
     my %doc;
-    my $doc_prop_map = SWISH_DOC_PROP_MAP();
+
+    # Swish built-in fields first
     for my $propname ( keys %$doc_prop_map ) {
         my $attr = $doc_prop_map->{$propname};
         $doc{$propname} = [ $data->doc->$attr ];
     }
-    my $props  = $data->properties;
-    my $metas  = $data->metanames;
+
+    # fields parsed from document
+    my $props = $data->properties;
+    my $metas = $data->metanames;
+
+    # field def cache
     my $fields = $self->{_fields};
+
+    # may need to add newly-discovered fields from $metas
+    # that were added via UndefinedMetaTags e.g.
+    for my $mname ( keys %$metas ) {
+        if ( !exists $fields->{$mname} ) {
+
+            #warn "New field: $mname\n";
+            $self->_add_new_field( $conf_metas->get($mname) );
+        }
+    }
 
     #dump $fields;
     #dump $props;
