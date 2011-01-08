@@ -22,7 +22,7 @@ WriteMakefile(
     PREREQ_PM => {
         'Test::More'    => 0,
         'KinoSearch'    => '0.31',    
-        'SWISH::Prog'   => 0.44,         
+        'SWISH::Prog'   => 0.49,
         'SWISH::3'      => 0.11, 
         'Sort::SQL'     => 0.06,
         'Search::Query' => 0.17,
