@@ -319,7 +319,7 @@ Returns the internal KinoSearch::Search::PolySearcher object.
 
 sub get_ks {
     my $self = shift;
-    my $uuid = $self->invindex->[0]->meta->Index->{UUID};
+    my $uuid = $self->invindex->[0]->meta->Index->{UUID} || $self->{_uuid};
     if ( !$self->{ks} ) {
 
         $self->debug and carp "init ks";

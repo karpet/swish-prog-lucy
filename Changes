@@ -80,3 +80,4 @@ Revision history for SWISH-Prog-KSx
 
 0.18    xxx
     * bump dep for Path::Class::File::Stat to 0.03
+    * fix uninit warning for UUID when no UUID is defined in the swish.xml file
