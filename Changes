@@ -78,3 +78,5 @@ Revision history for SWISH-Prog-KSx
       if the invindex has been modified while the searcher was open.
     * add support for UndefinedMetaTags and UndefinedXMLAttributes
 
+0.18    xxx
+    * bump dep for Path::Class::File::Stat to 0.03
