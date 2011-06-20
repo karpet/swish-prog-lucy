@@ -1,17 +1,17 @@
-package SWISH::Prog::KSx::Results;
+package SWISH::Prog::Lucy::Results;
 use strict;
 use warnings;
 
-our $VERSION = '0.19';
+our $VERSION = '0.01';
 
 use base qw( SWISH::Prog::Results );
-use SWISH::Prog::KSx::Result;
+use SWISH::Prog::Lucy::Result;
 
-__PACKAGE__->mk_ro_accessors(qw( ks_hits ));
+__PACKAGE__->mk_ro_accessors(qw( lucy_hits ));
 
 =head1 NAME
 
-SWISH::Prog::KSx::Results - search results for Swish3 KinoSearch backend
+SWISH::Prog::Lucy::Results - search results for Swish3 Lucy backend
 
 =head1 SYNOPSIS
 
@@ -19,7 +19,7 @@ SWISH::Prog::KSx::Results - search results for Swish3 KinoSearch backend
 
 =head1 DESCRIPTION
 
-SWISH::Prog::KSx::Results is a KinoSearch-based Results
+SWISH::Prog::Lucy::Results is an Apache Lucy based Results
 class for Swish3.
 
 =head1 METHODS
@@ -29,21 +29,21 @@ the L<SWISH::Prog::Results> documentation.
 
 =head2 next
 
-Returns the next SWISH::Prog::KSx::Result object from the result set.
+Returns the next SWISH::Prog::Lucy::Result object from the result set.
 
 =cut
 
 sub next {
-    my $hit = $_[0]->ks_hits->next or return;
-    return SWISH::Prog::KSx::Result->new(
+    my $hit = $_[0]->lucy_hits->next or return;
+    return SWISH::Prog::Lucy::Result->new(
         doc   => $hit,
         score => int( $hit->get_score * 1000 ),  # scale like xapian, swish-e
     );
 }
 
-=head2 ks_hits
+=head2 lucy_hits
 
-Get the internal KinoSearch::Search::Hits object.
+Get the internal Lucy::Search::Hits object.
 
 =cut
 
@@ -57,15 +57,15 @@ Peter Karman, C<< <karman at cpan.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-swish-prog-ksx at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SWISH-Prog-KSx>.  I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-swish-prog-lucy at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SWISH-Prog-Lucy>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc SWISH::Prog::KSx
+    perldoc SWISH::Prog::Lucy
 
 
 You can also look for information at:
@@ -78,19 +78,19 @@ L<http://lists.swish-e.org/listinfo/users>
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-KSx>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-Lucy>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/SWISH-Prog-KSx>
+L<http://annocpan.org/dist/SWISH-Prog-Lucy>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/SWISH-Prog-KSx>
+L<http://cpanratings.perl.org/d/SWISH-Prog-Lucy>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/SWISH-Prog-KSx/>
+L<http://search.cpan.org/dist/SWISH-Prog-Lucy/>
 
 =back
 

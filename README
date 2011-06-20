@@ -1,4 +1,4 @@
-SWISH-Prog-KSx
+SWISH-Prog-Lucy
 
 INSTALLATION
 
@@ -14,26 +14,26 @@ SUPPORT AND DOCUMENTATION
 After installing, you can find documentation for this module with the
 perldoc command.
 
-    perldoc SWISH::Prog::KSx
+    perldoc SWISH::Prog::Lucy
 
 You can also look for information at:
 
     RT, CPAN's request tracker
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-KSx
+        http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-Lucy
 
     AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/SWISH-Prog-KSx
+        http://annocpan.org/dist/SWISH-Prog-Lucy
 
     CPAN Ratings
-        http://cpanratings.perl.org/d/SWISH-Prog-KSx
+        http://cpanratings.perl.org/d/SWISH-Prog-Lucy
 
     Search CPAN
-        http://search.cpan.org/dist/SWISH-Prog-KSx/
+        http://search.cpan.org/dist/SWISH-Prog-Lucy/
 
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2009 Peter Karman
+Copyright (C) 2011 Peter Karman
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

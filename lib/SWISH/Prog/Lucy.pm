@@ -1,12 +1,12 @@
-package SWISH::Prog::KSx;
+package SWISH::Prog::Lucy;
 use strict;
 use warnings;
 
-our $VERSION = '0.19';
+our $VERSION = '0.01';
 
 =head1 NAME
 
-SWISH::Prog::KSx - Swish3 KinoSearch backend
+SWISH::Prog::Lucy - Swish3 Apache Lucy backend
 
 =head1 SYNOPSIS
 
@@ -15,7 +15,7 @@ SWISH::Prog::KSx - Swish3 KinoSearch backend
  my $indexer = SWISH::Prog->new(
     invindex   => 'path/to/index.swish',
     aggregator => 'fs',
-    indexer    => 'ks',
+    indexer    => 'lucy',
     config     => 'path/to/swish.conf',
  );
  
@@ -23,7 +23,7 @@ SWISH::Prog::KSx - Swish3 KinoSearch backend
  
  
  # then search the index
- my $searcher = SWISH::Prog::KSx::Searcher->new(
+ my $searcher = SWISH::Prog::Lucy::Searcher->new(
     invindex => 'path/to/index.swish',
     config   => 'path/to/swish.conf',
  );
@@ -38,7 +38,7 @@ SWISH::Prog::KSx - Swish3 KinoSearch backend
 B<STOP>: Read the L<SWISH::Prog> documentation before you use this
 module.
 
-SWISH::Prog::KSx is a KinoSearch-based implementation of Swish3,
+SWISH::Prog::Lucy is an Apache Lucy based implementation of Swish3,
 using the SWISH::3 bindings for libswish3.
 
 See the L<SWISH::Prog> docs for more information about the class
@@ -46,9 +46,9 @@ hierarchy and history.
 
 See the Swish3 development site at L<http://dev.swish-e.org/wiki/swish3>.
 
-=head1 Why Not Use KinoSearch Directly?
+=head1 Why Not Use Lucy Directly?
 
-You can use KinoSearch directly. Using KinoSearch via SWISH::Prog::KSx
+You can use Lucy directly. Using Lucy via SWISH::Prog::Lucy
 offers a few advantages:
 
 =over
@@ -67,9 +67,9 @@ with an extensible configuration system, build on top of libxml2.
 
 =item Simple now, complex later
 
-You can index your content with SWISH::Prog::KSx,
+You can index your content with SWISH::Prog::Lucy,
 then build a more complex searching application directly
-with KinoSearch.
+with Lucy.
 
 =back
 
@@ -79,15 +79,15 @@ Peter Karman, C<< <karman at cpan.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-swish-prog-ksx at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SWISH-Prog-KSx>.  I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-swish-prog-lucy at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SWISH-Prog-Lucy>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc SWISH::Prog::KSx
+    perldoc SWISH::Prog::Lucy
 
 You can also look for information at:
 
@@ -99,19 +99,19 @@ L<http://lists.swish-e.org/listinfo/users>
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-KSx>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-Lucy>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/SWISH-Prog-KSx>
+L<http://annocpan.org/dist/SWISH-Prog-Lucy>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/SWISH-Prog-KSx>
+L<http://cpanratings.perl.org/d/SWISH-Prog-Lucy>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/SWISH-Prog-KSx/>
+L<http://search.cpan.org/dist/SWISH-Prog-Lucy/>
 
 =back
 
@@ -127,7 +127,7 @@ See http://dev.perl.org/licenses/ for more information.
 
 =head1 SEE ALSO
 
-L<SWISH::Prog>, L<KinoSearch>
+L<SWISH::Prog>, L<Lucy>
 
 =cut
 

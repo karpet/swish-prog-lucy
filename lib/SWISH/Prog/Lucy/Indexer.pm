@@ -1,17 +1,17 @@
-package SWISH::Prog::KSx::Indexer;
+package SWISH::Prog::Lucy::Indexer;
 use strict;
 use warnings;
 
-our $VERSION = '0.19';
+our $VERSION = '0.01';
 
 use base qw( SWISH::Prog::Indexer );
-use SWISH::Prog::KSx::InvIndex;
+use SWISH::Prog::Lucy::InvIndex;
 
-use KinoSearch::Index::Indexer;
-use KinoSearch::Plan::Schema;
-use KinoSearch::Plan::FullTextType;
-use KinoSearch::Plan::StringType;
-use KinoSearch::Analysis::PolyAnalyzer;
+use Lucy::Index::Indexer;
+use Lucy::Plan::Schema;
+use Lucy::Plan::FullTextType;
+use Lucy::Plan::StringType;
+use Lucy::Analysis::PolyAnalyzer;
 
 use Carp;
 use SWISH::3 qw( :constants );
@@ -22,20 +22,20 @@ use Path::Class::File::Lockable;
 
 =head1 NAME
 
-SWISH::Prog::KSx::Indexer - Swish3 KinoSearch indexer
+SWISH::Prog::Lucy::Indexer - Swish3 Apache Lucy indexer
 
 =head1 SYNOPSIS
 
- use SWISH::Prog::KSx::Indexer;
- my $indexer = SWISH::Prog::KSx::Indexer->new(
+ use SWISH::Prog::Lucy::Indexer;
+ my $indexer = SWISH::Prog::Lucy::Indexer->new(
     config      => SWISH::Prog::Config->new(),
-    invindex    => SWISH::Prog::KSx::InvIndex->new(),
+    invindex    => SWISH::Prog::Lucy::InvIndex->new(),
     
  );
 
 =head1 DESCRIPTION
 
-SWISH::Prog::KSx::Indexer is a KinoSearch-based indexer
+SWISH::Prog::Lucy::Indexer is an Apache Lucy based indexer
 class for Swish3.
 
 =head1 METHODS
@@ -55,14 +55,14 @@ sub init {
     my $self = shift;
     $self->SUPER::init(@_);
 
-    $self->{invindex} ||= SWISH::Prog::KSx::InvIndex->new;
+    $self->{invindex} ||= SWISH::Prog::Lucy::InvIndex->new;
 
     if ( $self->{invindex} && !blessed( $self->{invindex} ) ) {
         $self->{invindex}
-            = SWISH::Prog::KSx::InvIndex->new( path => $self->{invindex} );
+            = SWISH::Prog::Lucy::InvIndex->new( path => $self->{invindex} );
     }
 
-    unless ( $self->invindex->isa('SWISH::Prog::KSx::InvIndex') ) {
+    unless ( $self->invindex->isa('SWISH::Prog::Lucy::InvIndex') ) {
         croak ref($self)
             . " requires SWISH::Prog::Xapian::InvIndex-derived object";
     }
@@ -94,17 +94,17 @@ sub init {
         $self->_verify_swish3_config();
     }
 
-    # 4. always turn off tokenizer, preferring KS do it
+    # 4. always turn off tokenizer, preferring Lucy do it
     $self->{s3}->analyzer->set_tokenize(0);
 
     my $config = $self->{s3}->config;
     my $lang = $config->get_index->get( SWISH_INDEX_STEMMER_LANG() ) || 'en';
     $self->{_lang} = $lang;    # cache for finish()
-    my $schema = KinoSearch::Schema->new();
+    my $schema = Lucy::Plan::Schema->new();
     my $analyzer
-        = KinoSearch::Analysis::PolyAnalyzer->new( language => $lang, );
+        = Lucy::Analysis::PolyAnalyzer->new( language => $lang, );
 
-    # build the KS fields, which are a merger of MetaNames+PropertyNames
+    # build the Lucy fields, which are a merger of MetaNames+PropertyNames
     my %fields;
 
     my $built_in_props = SWISH_DOC_PROP_MAP();
@@ -139,8 +139,8 @@ sub init {
 
     $self->{_fields} = \%fields;
 
-    my $property_only = KinoSearch::Plan::StringType->new( sortable => 1, );
-    my $store_no_sort = KinoSearch::Plan::StringType->new(
+    my $property_only = Lucy::Plan::StringType->new( sortable => 1, );
+    my $store_no_sort = Lucy::Plan::StringType->new(
         sortable => 0,
         stored   => 1,
     );
@@ -168,7 +168,7 @@ sub init {
             #warn "spec meta $name";
             $schema->spec_field(
                 name => $name,
-                type => KinoSearch::Plan::FullTextType->new(
+                type => Lucy::Plan::FullTextType->new(
                     analyzer => $analyzer,
                     stored   => 0,
                     boost    => $field->{bias} || 1.0,
@@ -194,7 +194,7 @@ sub init {
             #warn "spec meta+prop $name";
             $schema->spec_field(
                 name => $name,
-                type => KinoSearch::Plan::FullTextType->new(
+                type => Lucy::Plan::FullTextType->new(
                     analyzer      => $analyzer,
                     highlightable => 1,
                     sortable      => $field->{sortable},
@@ -258,8 +258,8 @@ sub init {
 
     #dump( \%fields );
 
-    # TODO can pass ks in?
-    $self->{ks} ||= KinoSearch::Index::Indexer->new(
+    # TODO can pass lucy in?
+    $self->{lucy} ||= Lucy::Index::Indexer->new(
         schema => $schema,
         index  => $self->invindex->path,
         create => 1,
@@ -267,8 +267,8 @@ sub init {
 
     # cache our objects in case we later
     # need to create any fields on-the-fly
-    $self->{__ks}->{analyzer} = $analyzer;
-    $self->{__ks}->{schema}   = $schema;
+    $self->{__lucy}->{analyzer} = $analyzer;
+    $self->{__lucy}->{schema}   = $schema;
 
     return $self;
 }
@@ -289,10 +289,10 @@ sub _add_new_field {
 
     # a newly defined MetaName matching an already-defined PropertyName
     if ( $field->{is_prop} ) {
-        $self->{__ks}->{schema}->spec_field(
+        $self->{__lucy}->{schema}->spec_field(
             name => $name,
-            type => KinoSearch::Plan::FullTextType->new(
-                analyzer      => $self->{__ks}->{analyzer},
+            type => Lucy::Plan::FullTextType->new(
+                analyzer      => $self->{__lucy}->{analyzer},
                 highlightable => 1,
                 sortable      => $field->{sortable},
                 boost         => $field->{bias} || 1.0,
@@ -303,10 +303,10 @@ sub _add_new_field {
     # just a new MetaName
     else {
 
-        $self->{__ks}->{schema}->spec_field(
+        $self->{__lucy}->{schema}->spec_field(
             name => $name,
-            type => KinoSearch::Plan::FullTextType->new(
-                analyzer => $self->{__ks}->{analyzer},
+            type => Lucy::Plan::FullTextType->new(
+                analyzer => $self->{__lucy}->{analyzer},
                 stored   => 0,
                 boost    => $field->{bias} || 1.0,
             ),
@@ -403,17 +403,17 @@ sub _handler {
     $self->debug and carp dump \%doc;
 
     # make sure we delete any existing doc with same URI
-    $self->{ks}->delete_by_term(
+    $self->{lucy}->delete_by_term(
         field => 'swishdocpath',
         term  => $doc{swishdocpath}
     );
 
-    $self->{ks}->add_doc( \%doc );
+    $self->{lucy}->add_doc( \%doc );
 }
 
 =head2 finish
 
-Calls commit() on the internal KinoSearch::Indexer object,
+Calls commit() on the internal Lucy::Indexer object,
 writes the C<swish.xml> header file and calls the superclass finish()
 method.
 
@@ -428,7 +428,7 @@ sub finish {
 
     # get a lock on our header file till
     # this entire transaction is complete.
-    # Note that we trust the KS locking feature
+    # Note that we trust the Lucy locking feature
     # to have prevented any other process
     # from getting a lock on the invindex itself,
     # but we want to make sure nothing interrupts
@@ -442,11 +442,11 @@ sub finish {
     $lock_file->lock;
 
     # commit our changes
-    $self->{ks}->commit();
+    $self->{lucy}->commit();
 
     # get total doc count
     my $polyreader
-        = KinoSearch::Index::PolyReader->open( index => "$invindex", );
+        = Lucy::Index::PolyReader->open( index => "$invindex", );
     my $doc_count = $polyreader->doc_count();
 
     # write header
@@ -456,7 +456,7 @@ sub finish {
     my $uuid = join( "", @chars[ map { rand @chars } ( 1 .. 24 ) ] );
 
     $index->set( SWISH_INDEX_NAME(),         "$invindex" );
-    $index->set( SWISH_INDEX_FORMAT(),       'KSx' );
+    $index->set( SWISH_INDEX_FORMAT(),       'Lucy' );
     $index->set( SWISH_INDEX_STEMMER_LANG(), $self->{_lang} );
     $index->set( "DocCount",                 $doc_count );
     $index->set( "UUID",                     $uuid );
@@ -477,14 +477,14 @@ sub finish {
     return $doc_count;
 }
 
-=head2 get_ks
+=head2 get_lucy
 
-Returns the internal KinoSearch::Index::Indexer object.
+Returns the internal Lucy::Index::Indexer object.
 
 =cut
 
-sub get_ks {
-    return shift->{ks};
+sub get_lucy {
+    return shift->{lucy};
 }
 
 1;
@@ -497,15 +497,15 @@ Peter Karman, C<< <karman at cpan.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-swish-prog-ksx at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SWISH-Prog-KSx>.  I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-swish-prog-lucy at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SWISH-Prog-Lucy>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc SWISH::Prog::KSx
+    perldoc SWISH::Prog::Lucy
 
 
 You can also look for information at:
@@ -518,19 +518,19 @@ L<http://lists.swish-e.org/listinfo/users>
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-KSx>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-Lucy>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/SWISH-Prog-KSx>
+L<http://annocpan.org/dist/SWISH-Prog-Lucy>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/SWISH-Prog-KSx>
+L<http://cpanratings.perl.org/d/SWISH-Prog-Lucy>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/SWISH-Prog-KSx/>
+L<http://search.cpan.org/dist/SWISH-Prog-Lucy/>
 
 =back
 

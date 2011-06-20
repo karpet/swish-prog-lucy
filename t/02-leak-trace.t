@@ -8,30 +8,30 @@ use Test::LeakTrace;
 
 #use Devel::LeakGuard::Object qw( GLOBAL_bless :at_end leakguard );
 
-my $KNOWN_LEAKS = 105;    # KinoSearch, SWISH::Filter, et al
+my $KNOWN_LEALucy = 105;    # Lucy, SWISH::Filter, et al
 
 use_ok('SWISH::Prog');
-use_ok('SWISH::Prog::KSx::InvIndex');
-use_ok('SWISH::Prog::KSx::Searcher');
+use_ok('SWISH::Prog::Lucy::InvIndex');
+use_ok('SWISH::Prog::Lucy::Searcher');
 
-my $invindex = SWISH::Prog::KSx::InvIndex->new(
-    clobber => 0,                 # KS handles this
+my $invindex = SWISH::Prog::Lucy::InvIndex->new(
+    clobber => 0,                 # Lucy handles this
     path    => 't/index.swish',
 );
 SKIP: {
 
-    unless ( $ENV{TEST_LEAKS} ) {
-        skip "set TEST_LEAKS to test memory leaks", 1;
+    unless ( $ENV{TEST_LEALucy} ) {
+        skip "set TEST_LEALucy to test memory lealucy", 1;
     }
 
-    leaks_cmp_ok {
+    lealucy_cmp_ok {
 
         #leakguard {
 
         my $program = SWISH::Prog->new(
-            invindex   => "$invindex",  # force stringify to avoid leaks
+            invindex   => "$invindex",  # force stringify to avoid lealucy
             aggregator => 'fs',
-            indexer    => 'ks',
+            indexer    => 'lucy',
             config     => 't/config.xml',
 
             #verbose    => 1,
@@ -48,18 +48,18 @@ SKIP: {
         $program->run('t/test.html');
 
     }
-    '<=', $KNOWN_LEAKS, "SWISH::Prog leak test";
+    '<=', $KNOWN_LEALucy, "SWISH::Prog leak test";
 
-#    leaks_cmp_ok {
-#        my $indexer = SWISH::Prog::KSx::Indexer->new(
-#            invindex => "$invindex",  # force stringify to avoid leaks
+#    lealucy_cmp_ok {
+#        my $indexer = SWISH::Prog::Lucy::Indexer->new(
+#            invindex => "$invindex",  # force stringify to avoid lealucy
 #            config   => 't/config.xml',
 #        );
 #
 #        #$indexer->invindex->path->file( SWISH_HEADER_FILE() );
 #
 #    }
-#    '<=', $KNOWN_LEAKS, "SWISH::Prog::KSx::Indexer leak test";
+#    '<=', $KNOWN_LEALucy, "SWISH::Prog::Lucy::Indexer leak test";
 
     #    on_leak => sub {
     #        my $report = shift;
@@ -68,8 +68,8 @@ SKIP: {
     #        }
     #    };
 
-    #    leaks_cmp_ok {
-    #        my $searcher = SWISH::Prog::KSx::Searcher->new(
+    #    lealucy_cmp_ok {
+    #        my $searcher = SWISH::Prog::Lucy::Searcher->new(
     #            invindex => $invindex,
     #            config   => 't/test.conf',
     #        );

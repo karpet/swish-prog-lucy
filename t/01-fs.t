@@ -10,11 +10,11 @@ use Search::Tools::UTF8;
 #binmode Test::More->builder->failure_output, ":utf8";
 
 use_ok('SWISH::Prog');
-use_ok('SWISH::Prog::KSx::InvIndex');
-use_ok('SWISH::Prog::KSx::Searcher');
+use_ok('SWISH::Prog::Lucy::InvIndex');
+use_ok('SWISH::Prog::Lucy::Searcher');
 
-ok( my $invindex = SWISH::Prog::KSx::InvIndex->new(
-        clobber => 0,                 # KS handles this
+ok( my $invindex = SWISH::Prog::Lucy::InvIndex->new(
+        clobber => 0,                 # Lucy handles this
         path    => 't/index.swish',
     ),
     "new invindex"
@@ -27,7 +27,7 @@ ok( $program->index('t/'), "run program" );
 is( $program->count, 2, "indexed test docs" );
 
 ok( my $searcher
-        = SWISH::Prog::KSx::Searcher->new( invindex => 't/index.swish', ),
+        = SWISH::Prog::Lucy::Searcher->new( invindex => 't/index.swish', ),
     "new searcher"
 );
 
@@ -96,6 +96,8 @@ is( $results4->hits, 2, "2 hits" );
 ok( my $results5 = $searcher->search('running*'),
     "search stemmable wildcard" );
 is( $results5->hits, 1, "1 hit" );
+diag( $results5->query );
+diag( dump $results5->query->as_lucy_query->dump );
 
 ok( my $results6 = $searcher->search(qq/"text here"~4/), "search proximity" );
 is( $results6->hits, 1, "1 hit" );
@@ -135,7 +137,7 @@ sub make_program {
     ok( my $program = SWISH::Prog->new(
             invindex   => $invindex,
             aggregator => 'fs',
-            indexer    => 'ks',
+            indexer    => 'lucy',
             config     => 't/config.xml',
 
             #verbose    => 1,

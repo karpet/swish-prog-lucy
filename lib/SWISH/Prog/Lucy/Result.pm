@@ -1,8 +1,8 @@
-package SWISH::Prog::KSx::Result;
+package SWISH::Prog::Lucy::Result;
 use strict;
 use warnings;
 
-our $VERSION = '0.19';
+our $VERSION = '0.01';
 
 use base qw( SWISH::Prog::Result );
 use SWISH::3 ':constants';
@@ -10,7 +10,7 @@ use Carp;
 
 =head1 NAME
 
-SWISH::Prog::KSx::Result - search result for Swish3 KinoSearch backend
+SWISH::Prog::Lucy::Result - search result for Swish3 Apache Lucy backend
 
 =head1 SYNOPSIS
 
@@ -18,7 +18,7 @@ SWISH::Prog::KSx::Result - search result for Swish3 KinoSearch backend
 
 =head1 DESCRIPTION
 
-SWISH::Prog::KSx::Result is a KinoSearch-based Result
+SWISH::Prog::Lucy::Result is an Apache Lucy based Result
 class for Swish3.
 
 =head1 METHODS
@@ -85,15 +85,15 @@ Peter Karman, C<< <karman at cpan.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-swish-prog-ksx at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SWISH-Prog-KSx>.  I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-swish-prog-lucy at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SWISH-Prog-Lucy>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc SWISH::Prog::KSx
+    perldoc SWISH::Prog::Lucy
 
 
 You can also look for information at:
@@ -106,19 +106,19 @@ L<http://lists.swish-e.org/listinfo/users>
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-KSx>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-Lucy>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/SWISH-Prog-KSx>
+L<http://annocpan.org/dist/SWISH-Prog-Lucy>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/SWISH-Prog-KSx>
+L<http://cpanratings.perl.org/d/SWISH-Prog-Lucy>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/SWISH-Prog-KSx/>
+L<http://search.cpan.org/dist/SWISH-Prog-Lucy/>
 
 =back
 

@@ -1,28 +1,28 @@
-package SWISH::Prog::KSx::Searcher;
+package SWISH::Prog::Lucy::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.19';
+our $VERSION = '0.01';
 
 use base qw( SWISH::Prog::Searcher );
 
 use Carp;
 use SWISH::3 qw( :constants );
-use SWISH::Prog::KSx::Results;
-use KinoSearch::Searcher;
-use KinoSearch::Search::PolySearcher;
-use KinoSearch::Analysis::PolyAnalyzer;
-use KinoSearch::Search::SortRule;
-use KinoSearch::Search::SortSpec;
+use SWISH::Prog::Lucy::Results;
+use Lucy::Search::IndexSearcher;
+use Lucy::Search::PolySearcher;
+use Lucy::Analysis::PolyAnalyzer;
+use Lucy::Search::SortRule;
+use Lucy::Search::SortSpec;
 use Path::Class::File::Stat;
 use Data::Dump qw( dump );
 use Sort::SQL;
 use Search::Query;
-use Search::Query::Dialect::KSx;
+use Search::Query::Dialect::Lucy;
 
 =head1 NAME
 
-SWISH::Prog::KSx::Searcher - search Swish3 KinoSearch backend
+SWISH::Prog::Lucy::Searcher - search Swish3 Lucy backend
 
 =head1 SYNOPSIS
 
@@ -30,16 +30,16 @@ SWISH::Prog::KSx::Searcher - search Swish3 KinoSearch backend
 
 =head1 DESCRIPTION
 
-SWISH::Prog::KSx::Searcher is a KinoSearch-based Searcher
+SWISH::Prog::Lucy::Searcher is an Apache Lucy based Searcher
 class for Swish3.
 
-SWISH::Prog::KSx::Searcher is not made to replace the more fully-featured
-KinoSearch::Searcher class and its friends. Instead, SWISH::Prog::KSx::Searcher
+SWISH::Prog::Lucy::Searcher is not made to replace the more fully-featured
+Lucy::Search::Searcher class and its friends. Instead, SWISH::Prog::Lucy::Searcher
 provides a simple API similar to other SWISH::Prog::Searcher-based backends
 so that you can experiment with alternate
 storage engines without needing to change much code.
 When your search application requirements become more complex, the author
-recommends the switch to using KinoSearch::Searcher directly.
+recommends the switch to using Lucy::Search::Searcher directly.
 
 =head1 METHODS
 
@@ -61,16 +61,16 @@ sub init {
     my $config   = $invindex->meta;
 
     # cache the meta file stat(), to test if it changes
-    # while the searcher is open. See get_ks()
+    # while the searcher is open. See get_lucy()
     $self->{swish_xml}
         = Path::Class::File::Stat->new( $invindex->meta->file );
     $self->{swish_xml}->use_md5();    # slower but better
-    $self->{_uuid} = $config->Index->{UUID} || "KS_NO_UUID";
+    $self->{_uuid} = $config->Index->{UUID} || "LUCY_NO_UUID";
 
     # this does 2 things:
-    # 1: initializes the KS Searcher
-    # 2: gives a copy of the KS Schema object for field defs
-    my $schema = $self->get_ks()->get_schema();
+    # 1: initializes the Lucy Searcher
+    # 2: gives a copy of the Lucy Schema object for field defs
+    my $schema = $self->get_lucy()->get_schema();
 
     my $metanames   = $config->MetaNames;
     my $field_names = [ keys %$metanames ];
@@ -104,7 +104,7 @@ sub init {
 
     # TODO could expose 'qp' as param to new().
     $self->{qp} ||= Search::Query::Parser->new(
-        dialect          => 'KSx',
+        dialect          => 'Lucy',
         fields           => \%fieldtypes,
         query_class_opts => {
             default_field => $field_names,
@@ -128,10 +128,10 @@ sub _get_field_alias_for {
 
 =head2 search( I<query> [, I<opts> ] )
 
-Returns a SWISH::Prog::KSx::Results object.
+Returns a SWISH::Prog::Lucy::Results object.
 
 I<query> is assumed to be query string compatible
-with Search::Query::Dialect::KSx.
+with Search::Query::Dialect::Lucy.
 
 I<opts> is an optional hashref with the following supported
 key/values:
@@ -150,7 +150,7 @@ in SWISH::Prog::Searcher.
 =item order
 
 Takes a SQL-like text string (like SWISH::Prog::Native::Searcher)
-or a KinoSearch::Search::SortSpec object, which will determine
+or a Lucy::Search::SortSpec object, which will determine
 the sort order.
 
 =item limit
@@ -163,7 +163,7 @@ and an upper limit.
 
 The default boolean connector for parsing I<query>. Valid values
 are B<AND> and B<OR>. The default is
-B<AND> (which is different than KinoSearch::QueryParser, but the
+B<AND> (which is different than Lucy::QueryParser, but the
 same as Swish-e).
 
 =back
@@ -248,12 +248,11 @@ sub search {
 
                     if ( uc($dir) eq 'DESC' ) {
                         push @rules,
-                            KinoSearch::Search::SortRule->new(
-                            type => $type );
+                            Lucy::Search::SortRule->new( type => $type );
                     }
                     else {
                         push @rules,
-                            KinoSearch::Search::SortRule->new(
+                            Lucy::Search::SortRule->new(
                             type    => $type,
                             reverse => 1
                             );
@@ -265,71 +264,69 @@ sub search {
                     }
                     if ( uc($dir) eq 'DESC' ) {
                         push @rules,
-                            KinoSearch::Search::SortRule->new(
+                            Lucy::Search::SortRule->new(
                             field   => $field,
                             reverse => 1,
                             );
                     }
                     else {
                         push @rules,
-                            KinoSearch::Search::SortRule->new(
-                            field => $field, );
+                            Lucy::Search::SortRule->new( field => $field, );
                     }
                 }
             }
 
             # always include a sort by score so that we calculate a score.
             if ( !$has_sort_by_score ) {
-                push @rules,
-                    KinoSearch::Search::SortRule->new( type => 'score' );
+                push @rules, Lucy::Search::SortRule->new( type => 'score' );
             }
 
             # always have doc_id last
             # http://rectangular.com/pipermail/kinosearch/2010-May/007392.html
             if ( !$has_sort_by_doc_id ) {
-                push @rules,
-                    KinoSearch::Search::SortRule->new( type => 'doc_id' );
+                push @rules, Lucy::Search::SortRule->new( type => 'doc_id' );
             }
 
             $hits_args{sort_spec}
-                = KinoSearch::Search::SortSpec->new( rules => \@rules, );
+                = Lucy::Search::SortSpec->new( rules => \@rules, );
         }
     }
 
-    # turn the Search::Query object into a KS object
-    $hits_args{query} = $parsed_query->as_ks_query;
-    my $ks = $self->get_ks();
+    # turn the Search::Query object into a Lucy object
+    $hits_args{query} = $parsed_query->as_lucy_query;
+    my $lucy = $self->get_lucy();
     $self->debug
-        and carp "search in $ks for '$parsed_query' : " . dump( \%hits_args );
-    my $hits    = $ks->hits(%hits_args);
-    my $results = SWISH::Prog::KSx::Results->new(
-        hits    => $hits->total_hits,
-        ks_hits => $hits,
-        query   => $parsed_query,
+        and carp "search in $lucy for '$parsed_query' : "
+        . dump( \%hits_args );
+    my $hits    = $lucy->hits(%hits_args);
+    my $results = SWISH::Prog::Lucy::Results->new(
+        hits      => $hits->total_hits,
+        lucy_hits => $hits,
+        query     => $parsed_query,
     );
     $results->{_args} = \%hits_args;
     return $results;
 }
 
-=head2 get_ks
+=head2 get_lucy
 
-Returns the internal KinoSearch::Search::PolySearcher object.
+Returns the internal Lucy::Search::PolySearcher object.
 
 =cut
 
-sub get_ks {
+sub get_lucy {
     my $self = shift;
     my $uuid = $self->invindex->[0]->meta->Index->{UUID} || $self->{_uuid};
-    if ( !$self->{ks} ) {
+    if ( !$self->{lucy} ) {
 
-        $self->debug and carp "init ks";
-        $self->_open_ks;
+        $self->debug and carp "init lucy";
+        $self->_open_lucy;
 
     }
     elsif ( $self->{_uuid} && $self->{_uuid} ne $uuid ) {
 
         $self->debug and carp "UUID has changed from $self->{_uuid} to $uuid";
-        $self->_open_ks;
+        $self->_open_lucy;
 
         # recache
         $self->{_uuid} = $self->invindex->[0]->meta->Index->{UUID};
@@ -338,34 +335,34 @@ sub get_ks {
     elsif ( $self->{swish_xml}->changed ) {
 
         $self->debug and carp "MD5 sig has changed";
-        $self->_open_ks;
+        $self->_open_lucy;
 
     }
     else {
 
-        $self->debug and carp "re-using cached KS Searcher";
+        $self->debug and carp "re-using cached Lucy Searcher";
 
     }
-    return $self->{ks};
+    return $self->{lucy};
 }
 
-sub _open_ks {
+sub _open_lucy {
     my $self = shift;
     my @searchers;
     for my $idx ( @{ $self->invindex } ) {
-        my $searcher = KinoSearch::Searcher->new( index => "$idx" );
+        my $searcher = Lucy::Search::IndexSearcher->new( index => "$idx" );
         push @searchers, $searcher;
     }
 
     # assume all the schemas are identical.
     my $schema = $searchers[0]->get_schema();
 
-    $self->{ks} = KinoSearch::Search::PolySearcher->new(
+    $self->{lucy} = Lucy::Search::PolySearcher->new(
         schema    => $schema,
         searchers => \@searchers,
     );
 
-    $self->debug and carp "opened new PolySearcher: " . $self->{ks};
+    $self->debug and carp "opened new PolySearcher: " . $self->{lucy};
 }
 
 1;
@@ -378,15 +375,15 @@ Peter Karman, C<< <karman at cpan.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-swish-prog-ksx at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SWISH-Prog-KSx>.  I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-swish-prog-lucy at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SWISH-Prog-Lucy>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc SWISH::Prog::KSx
+    perldoc SWISH::Prog::Lucy
 
 
 You can also look for information at:
@@ -399,19 +396,19 @@ L<http://lists.swish-e.org/listinfo/users>
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-KSx>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-Lucy>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/SWISH-Prog-KSx>
+L<http://annocpan.org/dist/SWISH-Prog-Lucy>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/SWISH-Prog-KSx>
+L<http://cpanratings.perl.org/d/SWISH-Prog-Lucy>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/SWISH-Prog-KSx/>
+L<http://search.cpan.org/dist/SWISH-Prog-Lucy/>
 
 =back
 

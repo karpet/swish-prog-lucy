@@ -3,11 +3,11 @@ use strict;
 use Data::Dump qw( dump );
 
 use_ok('SWISH::Prog');
-use_ok('SWISH::Prog::KSx::InvIndex');
-use_ok('SWISH::Prog::KSx::Searcher');
+use_ok('SWISH::Prog::Lucy::InvIndex');
+use_ok('SWISH::Prog::Lucy::Searcher');
 
-ok( my $invindex = SWISH::Prog::KSx::InvIndex->new(
-        clobber => 0,                 # KS handles this
+ok( my $invindex = SWISH::Prog::Lucy::InvIndex->new(
+        clobber => 0,                 # Lucy handles this
         path    => 't/index.swish',
     ),
     "new invindex"
@@ -21,7 +21,7 @@ while ( ++$passes < 4 ) {
     ok( my $program = SWISH::Prog->new(
             invindex   => $invindex,
             aggregator => 'fs',
-            indexer    => 'ks',
+            indexer    => 'lucy',
             config     => 't/config.xml',
 
             #verbose    => 1,
@@ -40,7 +40,7 @@ while ( ++$passes < 4 ) {
     is( $program->count, 2, "indexed test docs" );
 
     if ( !$searcher ) {
-        ok( $searcher = SWISH::Prog::KSx::Searcher->new(
+        ok( $searcher = SWISH::Prog::Lucy::Searcher->new(
                 invindex => 't/index.swish',
             ),
             "new searcher"
