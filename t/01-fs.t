@@ -96,8 +96,8 @@ is( $results4->hits, 2, "2 hits" );
 ok( my $results5 = $searcher->search('running*'),
     "search stemmable wildcard" );
 is( $results5->hits, 1, "1 hit" );
-diag( $results5->query );
-diag( dump $results5->query->as_lucy_query->dump );
+#diag( $results5->query );
+#diag( dump $results5->query->as_lucy_query->dump );
 
 ok( my $results6 = $searcher->search(qq/"text here"~4/), "search proximity" );
 is( $results6->hits, 1, "1 hit" );

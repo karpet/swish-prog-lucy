@@ -26,7 +26,7 @@ WriteMakefile(
         'SWISH::3'                     => 0.11,
         'Sort::SQL'                    => 0.06,
         'Search::Query'                => 0.17,
-        'Search::Query::Dialect::Lucy' => 0.01,
+        'Search::Query::Dialect::Lucy' => 0.03,
         'Path::Class::File::Lockable'  => 0,
         'Path::Class::File::Stat'      => 0.03,
     },
