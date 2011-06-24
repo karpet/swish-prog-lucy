@@ -20,16 +20,16 @@ my $invindex = SWISH::Prog::Lucy::InvIndex->new(
 );
 SKIP: {
 
-    unless ( $ENV{TEST_LEALucy} ) {
-        skip "set TEST_LEALucy to test memory lealucy", 1;
+    unless ( $ENV{TEST_LEAKS} ) {
+        skip "set TEST_LEAKS to test memory leaks", 1;
     }
 
-    lealucy_cmp_ok {
+    leaks_cmp_ok {
 
         #leakguard {
 
         my $program = SWISH::Prog->new(
-            invindex   => "$invindex",  # force stringify to avoid lealucy
+            invindex   => "$invindex",  # force stringify to avoid leaks
             aggregator => 'fs',
             indexer    => 'lucy',
             config     => 't/config.xml',
@@ -50,9 +50,9 @@ SKIP: {
     }
     '<=', $KNOWN_LEALucy, "SWISH::Prog leak test";
 
-#    lealucy_cmp_ok {
+#    leaks_cmp_ok {
 #        my $indexer = SWISH::Prog::Lucy::Indexer->new(
-#            invindex => "$invindex",  # force stringify to avoid lealucy
+#            invindex => "$invindex",  # force stringify to avoid leaks
 #            config   => 't/config.xml',
 #        );
 #
@@ -68,7 +68,7 @@ SKIP: {
     #        }
     #    };
 
-    #    lealucy_cmp_ok {
+    #    leaks_cmp_ok {
     #        my $searcher = SWISH::Prog::Lucy::Searcher->new(
     #            invindex => $invindex,
     #            config   => 't/test.conf',

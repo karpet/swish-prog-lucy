@@ -3,3 +3,7 @@ Revision history for SWISH-Prog-Lucy
 0.01    21 June 2011
     * Initial release, based on SWISH::Prog::KSx.
 
+0.02    xxx
+    * Fix bad s/ks/lucy/ strings from initial port.
+    * bump SWISH::Prog dependency
+
