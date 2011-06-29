@@ -7,3 +7,8 @@ Revision history for SWISH-Prog-Lucy
     * Fix bad s/ks/lucy/ strings from initial port.
     * bump SWISH::Prog dependency
 
+0.03    28 June 2011
+    * no functional changes, just bumped version because
+      SWISH::Prog 0.51 had not been released prior to 0.02
+      and all the failing test reports are misleading.
+
