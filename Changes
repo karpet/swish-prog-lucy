@@ -12,3 +12,7 @@ Revision history for SWISH-Prog-Lucy
       SWISH::Prog 0.51 had not been released prior to 0.02
       and all the failing test reports are misleading.
 
+0.04    xxx
+    * add highlightable_fields feature to expose the highlightable
+      attribute of Lucy FullTextField objects.
+

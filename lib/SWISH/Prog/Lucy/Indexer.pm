@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Indexer;
 use strict;
 use warnings;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use base qw( SWISH::Prog::Indexer );
 use SWISH::Prog::Lucy::InvIndex;
@@ -20,6 +20,8 @@ use Data::Dump qw( dump );
 use Search::Tools::UTF8;
 use Path::Class::File::Lockable;
 
+__PACKAGE__->mk_accessors(qw( highlightable_fields ));
+
 =head1 NAME
 
 SWISH::Prog::Lucy::Indexer - Swish3 Apache Lucy indexer
@@ -28,9 +30,9 @@ SWISH::Prog::Lucy::Indexer - Swish3 Apache Lucy indexer
 
  use SWISH::Prog::Lucy::Indexer;
  my $indexer = SWISH::Prog::Lucy::Indexer->new(
-    config      => SWISH::Prog::Config->new(),
-    invindex    => SWISH::Prog::Lucy::InvIndex->new(),
-    
+    config               => SWISH::Prog::Config->new(),
+    invindex             => SWISH::Prog::Lucy::InvIndex->new(),
+    highlightable_fields => 0,
  );
 
 =head1 DESCRIPTION
@@ -49,11 +51,27 @@ Implements basic object set up. Called internally by new().
 If you override this method, be sure to call SUPER::init(@_) or the
 equivalent.
 
+In addition to the attributes documented in SWISH::Prog::Indexer,
+this class implements the following attributes:
+
+=over
+
+=item highlightable_fields
+
+Value should be 0 or 1. Default is 0. Passed directly to the
+constructor for Lucy::Plan::FullTextField objects as the value
+for the C<highlightable> option.
+
+=back
+
 =cut
 
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);
+
+    $self->{highlightable_fields} = 0
+        unless defined $self->{highlightable_fields};
 
     $self->{invindex} ||= SWISH::Prog::Lucy::InvIndex->new;
 
@@ -101,8 +119,7 @@ sub init {
     my $lang = $config->get_index->get( SWISH_INDEX_STEMMER_LANG() ) || 'en';
     $self->{_lang} = $lang;    # cache for finish()
     my $schema = Lucy::Plan::Schema->new();
-    my $analyzer
-        = Lucy::Analysis::PolyAnalyzer->new( language => $lang, );
+    my $analyzer = Lucy::Analysis::PolyAnalyzer->new( language => $lang, );
 
     # build the Lucy fields, which are a merger of MetaNames+PropertyNames
     my %fields;
@@ -169,9 +186,10 @@ sub init {
             $schema->spec_field(
                 name => $name,
                 type => Lucy::Plan::FullTextType->new(
-                    analyzer => $analyzer,
-                    stored   => 0,
-                    boost    => $field->{bias} || 1.0,
+                    analyzer      => $analyzer,
+                    stored        => 0,
+                    boost         => $field->{bias} || 1.0,
+                    highlightable => $self->{highlightable_fields},
                 ),
             );
         }
@@ -196,7 +214,7 @@ sub init {
                 name => $name,
                 type => Lucy::Plan::FullTextType->new(
                     analyzer      => $analyzer,
-                    highlightable => 1,
+                    highlightable => $self->{highlightable_fields},
                     sortable      => $field->{sortable},
                     boost         => $field->{bias} || 1.0,
                 ),
@@ -293,7 +311,7 @@ sub _add_new_field {
             name => $name,
             type => Lucy::Plan::FullTextType->new(
                 analyzer      => $self->{__lucy}->{analyzer},
-                highlightable => 1,
+                highlightable => $self->{highlightable_fields},
                 sortable      => $field->{sortable},
                 boost         => $field->{bias} || 1.0,
             ),
@@ -306,9 +324,10 @@ sub _add_new_field {
         $self->{__lucy}->{schema}->spec_field(
             name => $name,
             type => Lucy::Plan::FullTextType->new(
-                analyzer => $self->{__lucy}->{analyzer},
-                stored   => 0,
-                boost    => $field->{bias} || 1.0,
+                analyzer      => $self->{__lucy}->{analyzer},
+                stored        => 0,
+                boost         => $field->{bias} || 1.0,
+                highlightable => $self->{highlightable_fields},
             ),
         );
 
@@ -445,8 +464,7 @@ sub finish {
     $self->{lucy}->commit();
 
     # get total doc count
-    my $polyreader
-        = Lucy::Index::PolyReader->open( index => "$invindex", );
+    my $polyreader = Lucy::Index::PolyReader->open( index => "$invindex", );
     my $doc_count = $polyreader->doc_count();
 
     # write header
