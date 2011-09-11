@@ -16,7 +16,14 @@ SWISH::Prog::Lucy::Results - search results for Swish3 Lucy backend
 
 =head1 SYNOPSIS
 
- # see SWISH::Prog::Results
+  my $results = $searcher->search($query);
+  $results->find_relevant_fields(1);
+  while ( my $result = $results->next ) {
+      my $fields = $result->relevant_fields;
+      for my $f (@$fields) {
+          printf("%s matched %s\n", $result->uri, $f);
+      }
+  }
 
 =head1 DESCRIPTION
 
@@ -32,6 +39,9 @@ the L<SWISH::Prog::Results> documentation.
 
 Set to true (1) to locate the fields the query matched
 for each result. Default is false (0).
+
+NOTE that the Indexer must have had highlightable_fields set
+to true (1) in order for find_relevant_fields to work.
 
 =head2 next
 

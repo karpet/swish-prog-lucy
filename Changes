@@ -15,4 +15,7 @@ Revision history for SWISH-Prog-Lucy
 0.04    xxx
     * add highlightable_fields feature to expose the highlightable
       attribute of Lucy FullTextField objects.
+    * add find_relevant_fields feature to locate the fields
+      that matched the query. Depends upon highlightable_fields
+      being set to true.
 

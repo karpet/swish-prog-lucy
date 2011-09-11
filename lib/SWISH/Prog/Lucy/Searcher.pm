@@ -27,8 +27,17 @@ __PACKAGE__->mk_accessors(qw( find_relevant_fields ));
 SWISH::Prog::Lucy::Searcher - search Swish3 Lucy backend
 
 =head1 SYNOPSIS
-
- # see SWISH::Prog::Searcher
+ 
+ my $searcher = SWISH::Prog::Lucy::Searcher->new(
+     invindex             => 'path/to/index',
+     max_hits             => 1000,
+     find_relevant_fields => 1,   # default: 0
+ );
+                
+ my $results = $searcher->search( 'foo bar' );
+ while (my $result = $results->next) {
+     printf("%4d %s\n", $result->score, $result->uri);
+ }
 
 =head1 DESCRIPTION
 
