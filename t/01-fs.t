@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Test::More tests => 34;
+use Test::More tests => 35;
 use strict;
 use Data::Dump qw( dump );
 use Search::Tools::UTF8;
@@ -26,8 +26,10 @@ ok( $program->index('t/'), "run program" );
 
 is( $program->count, 2, "indexed test docs" );
 
-ok( my $searcher
-        = SWISH::Prog::Lucy::Searcher->new( invindex => 't/index.swish', ),
+ok( my $searcher = SWISH::Prog::Lucy::Searcher->new(
+        invindex             => 't/index.swish',
+        find_relevant_fields => 1,
+    ),
     "new searcher"
 );
 
@@ -42,6 +44,9 @@ ok( my $result = $results->next, "next result" );
 is( $result->uri, 't/test.html', 'get uri' );
 
 is( $result->title, "test html doc", "get title" );
+
+is( $result->relevant_fields->[0],
+    "swishtitle", "relevant field == swishtitle" );
 
 diag( $result->score );
 
@@ -73,6 +78,7 @@ while ( my $result2 = $results2->next ) {
     #diag($title);
     is( $result2->uri,   't/test.xml', 'get uri' );
     is( $result2->title, $utf8_title,  "get title" );
+    diag( 'result2: ' . dump $result2->relevant_fields );
 
 }
 
@@ -86,6 +92,7 @@ is( $results3->hits, 2, "2 hits" );
 my @results;
 while ( my $result3 = $results3->next ) {
     push @results, $result3->swishdocpath;
+    diag( 'result3: ' . dump $result3->relevant_fields );
 }
 is_deeply( \@results, [qw( t/test.html t/test.xml )], "results sorted ok" );
 
@@ -96,6 +103,7 @@ is( $results4->hits, 2, "2 hits" );
 ok( my $results5 = $searcher->search('running*'),
     "search stemmable wildcard" );
 is( $results5->hits, 1, "1 hit" );
+
 #diag( $results5->query );
 #diag( dump $results5->query->as_lucy_query->dump );
 
@@ -135,10 +143,11 @@ show_results_by_uri($sorted_by_lastmod);
 
 sub make_program {
     ok( my $program = SWISH::Prog->new(
-            invindex   => $invindex,
-            aggregator => 'fs',
-            indexer    => 'lucy',
-            config     => 't/config.xml',
+            invindex             => $invindex,
+            aggregator           => 'fs',
+            indexer              => 'lucy',
+            config               => 't/config.xml',
+            highlightable_fields => 1,
 
             #verbose    => 1,
             #debug      => 1,

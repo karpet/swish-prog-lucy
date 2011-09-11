@@ -189,7 +189,7 @@ sub init {
                     analyzer      => $analyzer,
                     stored        => 0,
                     boost         => $field->{bias} || 1.0,
-                    highlightable => $self->{highlightable_fields},
+                    highlightable => $self->highlightable_fields,
                 ),
             );
         }
@@ -214,7 +214,7 @@ sub init {
                 name => $name,
                 type => Lucy::Plan::FullTextType->new(
                     analyzer      => $analyzer,
-                    highlightable => $self->{highlightable_fields},
+                    highlightable => $self->highlightable_fields,
                     sortable      => $field->{sortable},
                     boost         => $field->{bias} || 1.0,
                 ),
@@ -311,7 +311,7 @@ sub _add_new_field {
             name => $name,
             type => Lucy::Plan::FullTextType->new(
                 analyzer      => $self->{__lucy}->{analyzer},
-                highlightable => $self->{highlightable_fields},
+                highlightable => $self->highlightable_fields,
                 sortable      => $field->{sortable},
                 boost         => $field->{bias} || 1.0,
             ),
@@ -327,7 +327,7 @@ sub _add_new_field {
                 analyzer      => $self->{__lucy}->{analyzer},
                 stored        => 0,
                 boost         => $field->{bias} || 1.0,
-                highlightable => $self->{highlightable_fields},
+                highlightable => $self->highlightable_fields,
             ),
         );
 

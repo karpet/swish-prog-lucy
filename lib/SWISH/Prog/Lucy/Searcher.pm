@@ -20,6 +20,8 @@ use Sort::SQL;
 use Search::Query;
 use Search::Query::Dialect::Lucy;
 
+__PACKAGE__->mk_accessors(qw( find_relevant_fields ));
+
 =head1 NAME
 
 SWISH::Prog::Lucy::Searcher - search Swish3 Lucy backend
@@ -48,7 +50,16 @@ the L<SWISH::Prog::Searcher> documentation.
 
 =head2 init
 
-Called internally by new().
+Called internally by new(). Additional parameters include:
+
+=over
+
+=item find_relevant_fields I<1|0>
+
+Set to true to have the Results object locate the fields
+that matched the query. Default is 0 (off).
+
+=back
 
 =cut
 
@@ -300,10 +311,14 @@ sub search {
         . dump( \%hits_args );
     my $hits    = $lucy->hits(%hits_args);
     my $results = SWISH::Prog::Lucy::Results->new(
-        hits      => $hits->total_hits,
-        lucy_hits => $hits,
-        query     => $parsed_query,
+        hits                 => $hits->total_hits,
+        lucy_hits            => $hits,
+        query                => $parsed_query,
+        find_relevant_fields => $self->find_relevant_fields,
     );
+    $results->{_searcher} = $lucy;
+    $results->{_compiler}
+        = $hits_args{query}->make_compiler( searcher => $lucy );
     $results->{_args} = \%hits_args;
     return $results;
 }

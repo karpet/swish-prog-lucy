@@ -7,6 +7,7 @@ our $VERSION = '0.04';
 use base qw( SWISH::Prog::Results );
 use SWISH::Prog::Lucy::Result;
 
+__PACKAGE__->mk_accessors(qw( find_relevant_fields ));
 __PACKAGE__->mk_ro_accessors(qw( lucy_hits ));
 
 =head1 NAME
@@ -27,6 +28,11 @@ class for Swish3.
 Only new and overridden methods are documented here. See
 the L<SWISH::Prog::Results> documentation.
 
+=head2 find_relevant_fields I<1|0>
+
+Set to true (1) to locate the fields the query matched
+for each result. Default is false (0).
+
 =head2 next
 
 Returns the next SWISH::Prog::Lucy::Result object from the result set.
@@ -35,9 +41,28 @@ Returns the next SWISH::Prog::Lucy::Result object from the result set.
 
 sub next {
     my $hit = $_[0]->lucy_hits->next or return;
+
+    # see http://markmail.org/message/xoqwxofwphlowqxf
+    my @relevant_fields;
+    if ( $_[0]->find_relevant_fields ) {
+        my $searcher = $_[0]->{_searcher};
+        my $doc_vec  = $searcher->fetch_doc_vec( $hit->get_doc_id );
+        my $schema   = $searcher->get_schema();
+        for my $field ( @{ $schema->all_fields } ) {
+            my $spans = $_[0]->{_compiler}->highlight_spans(
+                searcher => $searcher,
+                doc_vec  => $doc_vec,
+                field    => $field,
+            );
+            if (@$spans) {
+                push @relevant_fields, $field;
+            }
+        }
+    }
     return SWISH::Prog::Lucy::Result->new(
-        doc   => $hit,
-        score => int( $hit->get_score * 1000 ),  # scale like xapian, swish-e
+        relevant_fields => \@relevant_fields,
+        doc             => $hit,
+        score => int( $hit->get_score * 1000 ),   # scale like xapian, swish-e
     );
 }
 
