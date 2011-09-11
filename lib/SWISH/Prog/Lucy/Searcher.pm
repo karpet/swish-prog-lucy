@@ -318,17 +318,17 @@ sub search {
     $self->debug
         and carp "search in $lucy for '$parsed_query' : "
         . dump( \%hits_args );
-    my $hits    = $lucy->hits(%hits_args);
-    my $results = SWISH::Prog::Lucy::Results->new(
+    my $compiler = $hits_args{query}->make_compiler( searcher => $lucy );
+    my $hits     = $lucy->hits(%hits_args);
+    my $results  = SWISH::Prog::Lucy::Results->new(
         hits                 => $hits->total_hits,
         lucy_hits            => $hits,
         query                => $parsed_query,
         find_relevant_fields => $self->find_relevant_fields,
     );
+    $results->{_compiler} = $compiler;
     $results->{_searcher} = $lucy;
-    $results->{_compiler}
-        = $hits_args{query}->make_compiler( searcher => $lucy );
-    $results->{_args} = \%hits_args;
+    $results->{_args}     = \%hits_args;
     return $results;
 }
 

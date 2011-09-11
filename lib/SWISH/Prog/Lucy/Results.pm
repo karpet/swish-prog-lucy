@@ -56,10 +56,11 @@ sub next {
     my @relevant_fields;
     if ( $_[0]->find_relevant_fields ) {
         my $searcher = $_[0]->{_searcher};
+        my $compiler = $_[0]->{_compiler};
         my $doc_vec  = $searcher->fetch_doc_vec( $hit->get_doc_id );
         my $schema   = $searcher->get_schema();
         for my $field ( @{ $schema->all_fields } ) {
-            my $spans = $_[0]->{_compiler}->highlight_spans(
+            my $spans = $compiler->highlight_spans(
                 searcher => $searcher,
                 doc_vec  => $doc_vec,
                 field    => $field,

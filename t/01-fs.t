@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Test::More tests => 35;
+use Test::More tests => 38;
 use strict;
 use Data::Dump qw( dump );
 use Search::Tools::UTF8;
@@ -140,6 +140,18 @@ ok( my $sorted_by_lastmod
     "search sorted by lastmod"
 );
 show_results_by_uri($sorted_by_lastmod);
+
+ok( my $results_relevant = $searcher->search('2009*'), "search for 2009*" );
+while ( my $rr = $results_relevant->next ) {
+    my $f = $rr->relevant_fields;
+
+    #diag( $rr->uri . ' : ' . dump $f );
+    is( scalar @$f, 2, "2 relevant fields" );
+    is_deeply( $f, [ "timestamp", "date" ], "got relevant fields in order" );
+}
+
+###################################
+## helper functions
 
 sub make_program {
     ok( my $program = SWISH::Prog->new(
