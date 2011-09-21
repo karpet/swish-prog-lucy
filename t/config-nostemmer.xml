@@ -21,6 +21,6 @@
  </TagAlias>
  <UndefinedMetaTags>auto</UndefinedMetaTags>
  <Index>
-  <Stemmer>en</Stemmer>
+  <Stemmer>none</Stemmer>
  </Index>
 </swish>

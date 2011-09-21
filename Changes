@@ -19,3 +19,7 @@ Revision history for SWISH-Prog-Lucy
       that matched the query. Depends upon highlightable_fields
       being set to true.
 
+0.05    xxx
+    * add stemming support for Stemmer configuration and back compat with
+      Swish-e v 2.x FuzzyIndexingMode.
+

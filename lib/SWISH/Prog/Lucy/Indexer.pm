@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Indexer;
 use strict;
 use warnings;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use base qw( SWISH::Prog::Indexer );
 use SWISH::Prog::Lucy::InvIndex;
@@ -116,10 +116,20 @@ sub init {
     $self->{s3}->analyzer->set_tokenize(0);
 
     my $config = $self->{s3}->config;
-    my $lang = $config->get_index->get( SWISH_INDEX_STEMMER_LANG() ) || 'en';
+    my $lang   = $config->get_index->get( SWISH_INDEX_STEMMER_LANG() )
+        || 'none';
     $self->{_lang} = $lang;    # cache for finish()
     my $schema = Lucy::Plan::Schema->new();
-    my $analyzer = Lucy::Analysis::PolyAnalyzer->new( language => $lang, );
+    my $analyzer;
+    if ( $lang and $lang =~ m/^\w\w$/ ) {
+        $analyzer = Lucy::Analysis::PolyAnalyzer->new( language => $lang, );
+    }
+    else {
+        my $case_folder = Lucy::Analysis::CaseFolder->new;
+        my $tokenizer   = Lucy::Analysis::RegexTokenizer->new;
+        $analyzer = Lucy::Analysis::PolyAnalyzer->new(
+            analyzers => [ $case_folder, $tokenizer, ], );
+    }
 
     # build the Lucy fields, which are a merger of MetaNames+PropertyNames
     my %fields;

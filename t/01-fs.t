@@ -171,6 +171,7 @@ sub make_program {
     # the '1' arg indicates to append the value, not replace.
     $program->config->FileRules( 'dirname is index.swish', 1 );
     $program->config->FileRules( 'filename is config.xml', 1 );
+    $program->config->FileRules( 'filename is config-nostemmer.xml', 1 );
 
     return $program;
 }
