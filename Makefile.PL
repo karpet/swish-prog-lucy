@@ -21,8 +21,8 @@ WriteMakefile(
     PL_FILES  => {},
     PREREQ_PM => {
         'Test::More'                   => 0,
-        'Lucy'                         => '0.00100',
-        'SWISH::Prog'                  => 0.51,
+        'Lucy'                         => '0.002001',
+        'SWISH::Prog'                  => 0.52,
         'SWISH::3'                     => 0.11,
         'Sort::SQL'                    => 0.06,
         'Search::Query'                => 0.17,
