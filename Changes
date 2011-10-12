@@ -23,3 +23,6 @@ Revision history for SWISH-Prog-Lucy
     * add stemming support for Stemmer configuration and back compat with
       Swish-e v 2.x FuzzyIndexingMode.
 
+0.06    11 Oct 2011
+    * fix tests, bump dependency on SWISH::Prog 0.53
+
