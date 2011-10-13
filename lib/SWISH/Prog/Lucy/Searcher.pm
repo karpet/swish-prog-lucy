@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use base qw( SWISH::Prog::Searcher );
 
@@ -20,7 +20,7 @@ use Sort::SQL;
 use Search::Query;
 use Search::Query::Dialect::Lucy;
 
-__PACKAGE__->mk_accessors(qw( find_relevant_fields ));
+__PACKAGE__->mk_accessors(qw( find_relevant_fields qp ));
 
 =head1 NAME
 
@@ -68,6 +68,11 @@ Called internally by new(). Additional parameters include:
 Set to true to have the Results object locate the fields
 that matched the query. Default is 0 (off).
 
+=item qp I<search_query_parser_object>
+
+Optional. If passed, should be a Search::Query::Parser object.
+You can get/set the internal parser with the qp() method as well.
+
 =back
 
 =cut
@@ -114,15 +119,19 @@ sub init {
         keys %{ SWISH_DOC_PROP_MAP() };
     $propnames{swishrank} = { alias_for => undef };
     $propnames{score}     = { alias_for => undef };
+    my @pure_props;
     for my $name ( keys %$props ) {
         $propnames{$name} = { alias_for => undef };
         if ( exists $props->{$name}->{alias_for} ) {
             $propnames{$name}->{alias_for} = $props->{$name}->{alias_for};
         }
+        else {
+            push @pure_props, $name;
+        }
     }
-    $self->{_propnames} = \%propnames;
+    $self->{_propnames}  = \%propnames;
+    $self->{_pure_props} = \@pure_props;
 
-    # TODO could expose 'qp' as param to new().
     $self->{qp} ||= Search::Query::Parser->new(
         dialect          => 'Lucy',
         fields           => \%fieldtypes,
@@ -133,6 +142,18 @@ sub init {
     );
 
     return $self;
+}
+
+=head2 get_propnames 
+
+Returns array ref of PropertyNames defined for the invindex.
+The array will not contain any alias names or reserved PropertyNames.
+
+=cut
+
+sub get_propnames {
+    my $self = shift;
+    return $self->{_pure_props};
 }
 
 sub _get_field_alias_for {

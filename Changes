@@ -26,3 +26,6 @@ Revision history for SWISH-Prog-Lucy
 0.06    11 Oct 2011
     * fix tests, bump dependency on SWISH::Prog 0.53
 
+0.07    xxx
+    * expose qp() attribute as part of public API.
+    * add get_propnames() method to Searcher.
