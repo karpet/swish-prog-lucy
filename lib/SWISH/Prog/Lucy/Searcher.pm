@@ -337,8 +337,12 @@ sub search {
     $hits_args{query} = $parsed_query->as_lucy_query;
     my $lucy = $self->get_lucy();
     $self->debug
-        and carp "search in $lucy for '$parsed_query' : "
-        . dump( \%hits_args );
+        and carp sprintf(
+        "search in %s for [raw] '%s' [lucy] '%s' : %s",
+        $lucy, $parsed_query,
+        $hits_args{query}->to_string(),
+        dump( \%hits_args )
+        );
     my $compiler = $hits_args{query}->make_compiler( searcher => $lucy );
     my $hits     = $lucy->hits(%hits_args);
     my $results  = SWISH::Prog::Lucy::Results->new(
