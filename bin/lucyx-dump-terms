@@ -9,8 +9,7 @@ die $usage unless @ARGV;
 
 for my $invindex (@ARGV) {
     my $reader = Lucy::Index::IndexReader->open( index => $invindex );
-    my $searcher    = Lucy::Search::IndexSearcher->new( index => $invindex );
-    my $schema      = $searcher->get_schema();
+    my $schema      = $reader->get_schema();
     my $fields      = $schema->all_fields();
     my $seg_readers = $reader->seg_readers;
     for my $seg_reader (@$seg_readers) {
