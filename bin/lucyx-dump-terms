@@ -1,0 +1,32 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use Lucy;
+
+my $usage = "$0 path/to/index\n";
+
+die $usage unless @ARGV;
+
+for my $invindex (@ARGV) {
+    my $reader = Lucy::Index::IndexReader->open( index => $invindex );
+    my $searcher    = Lucy::Search::IndexSearcher->new( index => $invindex );
+    my $schema      = $searcher->get_schema();
+    my $fields      = $schema->all_fields();
+    my $seg_readers = $reader->seg_readers;
+    for my $seg_reader (@$seg_readers) {
+        my $seg_name = $seg_reader->get_seg_name;
+        my $seg_num  = $seg_reader->get_seg_num;
+        my $num_docs = $seg_reader->doc_max;
+        printf( "Segment %s [%d] has %s docs\n",
+            $seg_name, $seg_num, $num_docs );
+
+        my $lex_reader = $seg_reader->obtain('Lucy::Index::LexiconReader');
+        for my $field (@$fields) {
+            my $lexicon = $lex_reader->lexicon( field => $field );
+            while ( $lexicon->next ) {
+                printf( " %24s: %s\n", $field, $lexicon->get_term );
+            }
+        }
+    }
+
+}
