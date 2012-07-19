@@ -32,3 +32,6 @@ Revision history for SWISH-Prog-Lucy
 
 0.08    xxx
     * bump dependencies
+    * switch to Module::Install
+    * include bin/lucyx-dump-terms example script
+

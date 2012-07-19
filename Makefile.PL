@@ -1,51 +1,32 @@
 use strict;
 use warnings;
-use ExtUtils::MakeMaker;
+use inc::Module::Install;
+use 5.008003;
 
-my $MM_Version = $ExtUtils::MakeMaker::VERSION;
+name 'SWISH-Prog-Lucy';
+all_from 'lib/SWISH/Prog/Lucy.pm';
 
-if ( $MM_Version =~ /_/ )    # dev version
-{
-    $MM_Version = eval $MM_Version;
-    die $@ if ($@);
-}
+requires 'Test::More'                   => 0;
+requires 'Lucy'                         => '0.002002';
+requires 'SWISH::Prog'                  => 0.53;
+requires 'SWISH::3'                     => 1.000000;
+requires 'Sort::SQL'                    => 0.06;
+requires 'Search::Query'                => 0.17;
+requires 'Search::Query::Dialect::Lucy' => 0.04;
+requires 'LucyX::Search::WildcardQuery' => 0.03;
+requires 'Path::Class::File::Lockable'  => 0;
+requires 'Path::Class::File::Stat'      => 0.03;
+
+perl_version '5.8.3';
+license 'http://dev.perl.org/licenses/';
+homepage 'http://dev.swish-e.org/wiki/perl';
+bugtracker 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-Lucy';
+repository 'http://svn.swish-e.org/perl/SWISH-Prog-Lucy/';
+
+install_script 'bin/lucyx-dump-terms';
 
 WriteMakefile(
-    NAME          => 'SWISH::Prog::Lucy',
-    AUTHOR        => q{Peter Karman <karman at cpan dot org>},
-    VERSION_FROM  => 'lib/SWISH/Prog/Lucy.pm',
-    ABSTRACT_FROM => 'lib/SWISH/Prog/Lucy.pm',
-    ( $ExtUtils::MakeMaker::VERSION >= 6.3002
-        ? ( 'LICENSE' => 'perl' )
-        : () ),
-    PL_FILES  => {},
-    PREREQ_PM => {
-        'Test::More'                   => 0,
-        'Lucy'                         => '0.002002',
-        'SWISH::Prog'                  => 0.53,
-        'SWISH::3'                     => 1.000000,
-        'Sort::SQL'                    => 0.06,
-        'Search::Query'                => 0.17,
-        'Search::Query::Dialect::Lucy' => 0.04,
-        'LucyX::Search::WildcardQuery' => 0.03,
-        'Path::Class::File::Lockable'  => 0,
-        'Path::Class::File::Stat'      => 0.03,
-    },
-    dist => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
+    PL_FILES => {},
+    dist     => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'SWISH-Prog-Lucy-* t/index.swish' },
-    ( $MM_Version >= 6.48 ? ( MIN_PERL_VERSION => '5.8.3' ) : () ),
-    ( $MM_Version >= 6.31 ? ( LICENSE          => 'perl' )  : () ),
-    (   $MM_Version <= 6.44 ? ()
-        : ( META_MERGE => {
-                resources => {
-                    license  => 'http://dev.perl.org/licenses/',
-                    homepage => 'http://dev.swish-e.org/wiki/perl',
-                    bugtracker =>
-                        'http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-Lucy',
-                    repository =>
-                        'http://svn.swish-e.org/perl/SWISH-Prog-Lucy/',
-                },
-            }
-        )
-    ),
 );
