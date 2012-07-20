@@ -16,6 +16,7 @@ requires 'Search::Query::Dialect::Lucy' => 0.04;
 requires 'LucyX::Search::WildcardQuery' => 0.03;
 requires 'Path::Class::File::Lockable'  => 0;
 requires 'Path::Class::File::Stat'      => 0.03;
+requires 'Sys::Hostname'                => 0;
 
 perl_version '5.8.3';
 license 'http://dev.perl.org/licenses/';

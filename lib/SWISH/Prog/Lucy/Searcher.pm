@@ -9,6 +9,7 @@ use base qw( SWISH::Prog::Searcher );
 use Carp;
 use SWISH::3 qw( :constants );
 use SWISH::Prog::Lucy::Results;
+use Sys::Hostname qw( hostname );
 use Lucy::Search::IndexSearcher;
 use Lucy::Search::PolySearcher;
 use Lucy::Analysis::PolyAnalyzer;
@@ -398,8 +399,14 @@ sub get_lucy {
 sub _open_lucy {
     my $self = shift;
     my @searchers;
+    my $hostname = hostname() or croak "Can't get unique hostname";
+    my $manager = Lucy::Index::IndexManager->new( host => $hostname );
     for my $idx ( @{ $self->invindex } ) {
-        my $searcher = Lucy::Search::IndexSearcher->new( index => "$idx" );
+        my $reader = Lucy::Index::IndexReader->open(
+            index   => "$idx",
+            manager => $manager,
+        );
+        my $searcher = Lucy::Search::IndexSearcher->new( index => $reader, );
         push @searchers, $searcher;
     }
 

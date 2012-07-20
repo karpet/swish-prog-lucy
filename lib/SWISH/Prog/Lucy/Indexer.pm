@@ -7,6 +7,7 @@ our $VERSION = '0.08';
 use base qw( SWISH::Prog::Indexer );
 use SWISH::Prog::Lucy::InvIndex;
 
+use Sys::Hostname qw( hostname );
 use Lucy::Index::Indexer;
 use Lucy::Plan::Schema;
 use Lucy::Plan::FullTextType;
@@ -287,10 +288,13 @@ sub init {
     #dump( \%fields );
 
     # TODO can pass lucy in?
+    my $hostname = hostname() or croak "Can't get unique hostname";
+    my $manager = Lucy::Index::IndexManager->new( host => $hostname );
     $self->{lucy} ||= Lucy::Index::Indexer->new(
-        schema => $schema,
-        index  => $self->invindex->path,
-        create => 1,
+        schema  => $schema,
+        index   => $self->invindex->path,
+        create  => 1,
+        manager => $manager,
     );
 
     # cache our objects in case we later

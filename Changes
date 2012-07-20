@@ -34,4 +34,5 @@ Revision history for SWISH-Prog-Lucy
     * bump dependencies
     * switch to Module::Install
     * include bin/lucyx-dump-terms example script
+    * add dependency on Sys::Hostname, to support indexes on NFS shares.
 
