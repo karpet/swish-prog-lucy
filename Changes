@@ -30,7 +30,7 @@ Revision history for SWISH-Prog-Lucy
     * expose qp() attribute as part of public API.
     * add get_propnames() method to Searcher.
 
-0.08    xxx
+0.08    19 July 2012
     * bump dependencies
     * switch to Module::Install
     * include bin/lucyx-dump-terms example script
