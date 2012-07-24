@@ -2,34 +2,40 @@
 use strict;
 use constant HAS_LEAKTRACE => eval { require Test::LeakTrace };
 use Test::More HAS_LEAKTRACE
-    ? ( tests => 4 )
+    ? ( tests => 7 )
     : ( skip_all => 'require Test::LeakTrace' );
 use Test::LeakTrace;
 
 #use Devel::LeakGuard::Object qw( GLOBAL_bless :at_end leakguard );
 
-my $KNOWN_LEALucy = 105;    # Lucy, SWISH::Filter, et al
-
 use_ok('SWISH::Prog');
 use_ok('SWISH::Prog::Lucy::InvIndex');
 use_ok('SWISH::Prog::Lucy::Searcher');
 
-my $invindex = SWISH::Prog::Lucy::InvIndex->new(
-    clobber => 0,                 # Lucy handles this
-    path    => 't/index.swish',
-);
 SKIP: {
 
     unless ( $ENV{TEST_LEAKS} ) {
-        skip "set TEST_LEAKS to test memory leaks", 1;
+        skip "set TEST_LEAKS to test memory leaks", 4;
     }
 
     leaks_cmp_ok {
+        my $invindex = SWISH::Prog::Lucy::InvIndex->new(
+            clobber => 0,                  # Lucy handles this
+            path    => 't/index.swish1',
+        );
+    }
+    '<', 1, "invindex alone";
 
-        #leakguard {
+    # clean up
+    system("rm -rf t/index.swish1");
 
+    leaks_cmp_ok {
+        my $invindex = SWISH::Prog::Lucy::InvIndex->new(
+            clobber => 0,                  # Lucy handles this
+            path    => 't/index.swish2',
+        );
         my $program = SWISH::Prog->new(
-            invindex   => "$invindex",  # force stringify to avoid leaks
+            invindex   => "$invindex",      # force stringify to avoid leaks
             aggregator => 'fs',
             indexer    => 'lucy',
             config     => 't/config.xml',
@@ -37,7 +43,7 @@ SKIP: {
             #verbose    => 1,
             #debug      => 1,
         );
-        
+
         #diag( $program->aggregator->{_swish3} );
 
         # skip the index dir every time
@@ -48,41 +54,37 @@ SKIP: {
         $program->run('t/test.html');
 
     }
-    '<=', $KNOWN_LEALucy, "SWISH::Prog leak test";
+    '<=', 31, "indexer leak test";
 
-#    leaks_cmp_ok {
-#        my $indexer = SWISH::Prog::Lucy::Indexer->new(
-#            invindex => "$invindex",  # force stringify to avoid leaks
-#            config   => 't/config.xml',
-#        );
-#
-#        #$indexer->invindex->path->file( SWISH_HEADER_FILE() );
-#
-#    }
-#    '<=', $KNOWN_LEALucy, "SWISH::Prog::Lucy::Indexer leak test";
+    # clean up
+    system("rm -rf t/index.swish2");
 
-    #    on_leak => sub {
-    #        my $report = shift;
-    #        for my $pkg ( sort keys %$report ) {
-    #            printf "%s %d %d\n", $pkg, @{ $report->{$pkg} };
-    #        }
-    #    };
+    leaks_cmp_ok {
 
-    #    leaks_cmp_ok {
-    #        my $searcher = SWISH::Prog::Lucy::Searcher->new(
-    #            invindex => $invindex,
-    #            config   => 't/test.conf',
-    #        );
-    #        my $results = $searcher->search('test');
-    #        my $result  = $results->next;
-    #
-    #    }
-    #    '<', 1;
+        my $indexer = SWISH::Prog::Lucy::Indexer->new(
+            invindex => 't/index.swish3',
+            config   => 't/config.xml',
+        );
 
-}
+        $indexer->finish();
 
-END {
-    unless ( $ENV{PERL_DEBUG} ) {
-        $invindex->path->rmtree if $invindex;
+        #$indexer->invindex->path->file( SWISH_HEADER_FILE() );
+
     }
+    '<=', 27, "SWISH::Prog::Lucy::Indexer leak test";
+
+    leaks_cmp_ok {
+        my $searcher
+            = SWISH::Prog::Lucy::Searcher->new( invindex => "t/index.swish3",
+            );
+        my $results = $searcher->search('test');
+        my $result  = $results->next;
+
+    }
+    '<=', 21, "Searcher";
+
+    # clean up
+    system("rm -rf t/index.swish3");
+
 }
+

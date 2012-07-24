@@ -347,7 +347,7 @@ sub search {
     my $compiler = $hits_args{query}->make_compiler( searcher => $lucy );
     my $hits     = $lucy->hits(%hits_args);
     my $results  = SWISH::Prog::Lucy::Results->new(
-        hits                 => $hits->total_hits,
+        hits                 => $hits->total_hits + 0,
         lucy_hits            => $hits,
         query                => $parsed_query,
         find_relevant_fields => $self->find_relevant_fields,

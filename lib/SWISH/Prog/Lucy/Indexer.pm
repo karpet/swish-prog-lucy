@@ -138,7 +138,8 @@ sub init {
     my $built_in_props = SWISH_DOC_PROP_MAP();
 
     my $metanames = $config->get_metanames;
-    for my $name ( @{ $metanames->keys } ) {
+    my $meta_keys = $metanames->keys;
+    for my $name (@$meta_keys) {
         my $mn    = $metanames->get($name);
         my $alias = $mn->alias_for;
         $fields{$name}->{is_meta}       = 1;
@@ -150,8 +151,9 @@ sub init {
         }
     }
 
-    my $properties = $config->get_properties;
-    for my $name ( @{ $properties->keys } ) {
+    my $properties    = $config->get_properties;
+    my $property_keys = $properties->keys;
+    for my $name (@$property_keys) {
         if ( exists $built_in_props->{$name} ) {
             croak
                 "$name is a built-in PropertyName and should not be defined in config";
@@ -498,13 +500,15 @@ sub finish {
     # transaction complete
     $lock_file->unlock;
 
-    $self->debug and carp "wrote $header with $uuid";
+    $self->debug and carp "wrote $header with uuid $uuid";
 
     $self->{s3} = undef;    # invalidate this indexer
 
     $self->SUPER::finish(@_);
 
     $self->{_is_finished} = 1;
+    
+    $self->debug and carp "$doc_count docs indexed";
 
     return $doc_count;
 }
