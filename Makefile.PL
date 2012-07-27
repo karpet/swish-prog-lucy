@@ -8,7 +8,7 @@ all_from 'lib/SWISH/Prog/Lucy.pm';
 
 requires 'Test::More'                   => 0;
 requires 'Lucy'                         => '0.002002';
-requires 'SWISH::Prog'                  => 0.53;
+requires 'SWISH::Prog'                  => 0.60;
 requires 'SWISH::3'                     => 1.000000;
 requires 'Sort::SQL'                    => 0.06;
 requires 'Search::Query'                => 0.17;

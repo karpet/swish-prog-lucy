@@ -2,13 +2,13 @@ package SWISH::Prog::Lucy::Result;
 use strict;
 use warnings;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 use base qw( SWISH::Prog::Result );
 use SWISH::3 ':constants';
 use Carp;
 
-__PACKAGE__->mk_accessors(qw( relevant_fields ));
+__PACKAGE__->mk_accessors(qw( relevant_fields property_map ));
 
 =head1 NAME
 
@@ -77,11 +77,24 @@ Returns the value for I<PropertyName>.
 sub get_property {
     my $self = shift;
     my $propname = shift or croak "PropertyName required";
+
+    # if $propname is an alias, use the real property name (how it is stored)
+    if ( exists $self->{property_map}->{$propname} ) {
+        $propname = $self->{property_map}->{$propname};
+    }
+
     if ( !exists $self->{doc}->{$propname} ) {
         croak "no such PropertyName: $propname";
     }
     return $self->{doc}->{$propname};
 }
+
+=head2 property_map
+
+Get the read-only hashref of PropertyNameAlias to PropertyName
+values.
+
+=cut
 
 1;
 

@@ -36,3 +36,5 @@ Revision history for SWISH-Prog-Lucy
     * include bin/lucyx-dump-terms example script
     * add dependency on Sys::Hostname, to support indexes on NFS shares.
 
+0.09    xxx
+    * add property_map to respect PropertyNameAlias params in get_property()

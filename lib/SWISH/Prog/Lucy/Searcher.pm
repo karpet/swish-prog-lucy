@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 use base qw( SWISH::Prog::Searcher );
 
@@ -112,26 +112,9 @@ sub init {
         }
     }
 
-    my $props = $config->PropertyNames;
-
-    # start with the built-in PropertyNames,
-    # which cannot be aliases for anything.
-    my %propnames = map { $_ => { alias_for => undef } }
-        keys %{ SWISH_DOC_PROP_MAP() };
-    $propnames{swishrank} = { alias_for => undef };
-    $propnames{score}     = { alias_for => undef };
-    my @pure_props;
-    for my $name ( keys %$props ) {
-        $propnames{$name} = { alias_for => undef };
-        if ( exists $props->{$name}->{alias_for} ) {
-            $propnames{$name}->{alias_for} = $props->{$name}->{alias_for};
-        }
-        else {
-            push @pure_props, $name;
-        }
-    }
-    $self->{_propnames}  = \%propnames;
-    $self->{_pure_props} = \@pure_props;
+    $self->{_propnames}  = $config->get_properties;
+    $self->{_pure_props} = $config->get_pure_properties;
+    $self->{_prop_map}   = $config->get_property_map;
 
     $self->{qp} ||= Search::Query::Parser->new(
         dialect          => 'Lucy',
@@ -351,6 +334,7 @@ sub search {
         lucy_hits            => $hits,
         query                => $parsed_query,
         find_relevant_fields => $self->find_relevant_fields,
+        property_map         => $self->{_prop_map},
     );
     $results->{_compiler} = $compiler;
     $results->{_searcher} = $lucy;

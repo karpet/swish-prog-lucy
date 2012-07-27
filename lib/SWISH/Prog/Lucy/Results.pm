@@ -2,13 +2,13 @@ package SWISH::Prog::Lucy::Results;
 use strict;
 use warnings;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 use base qw( SWISH::Prog::Results );
 use SWISH::Prog::Lucy::Result;
 
 __PACKAGE__->mk_accessors(qw( find_relevant_fields ));
-__PACKAGE__->mk_ro_accessors(qw( lucy_hits ));
+__PACKAGE__->mk_ro_accessors(qw( lucy_hits property_map ));
 
 =head1 NAME
 
@@ -73,6 +73,7 @@ sub next {
     return SWISH::Prog::Lucy::Result->new(
         relevant_fields => \@relevant_fields,
         doc             => $hit,
+        property_map    => $_[0]->{property_map},
         score => int( $hit->get_score * 1000 ),   # scale like xapian, swish-e
     );
 }
@@ -80,6 +81,11 @@ sub next {
 =head2 lucy_hits
 
 Get the internal Lucy::Search::Hits object.
+
+=head2 property_map
+
+Get the read-only hashref of PropertyNameAlias to PropertyName
+values.
 
 =cut
 

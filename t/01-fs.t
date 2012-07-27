@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Test::More tests => 38;
+use Test::More tests => 40;
 use strict;
 use Data::Dump qw( dump );
 use Search::Tools::UTF8;
@@ -39,11 +39,27 @@ ok( my $results = $searcher->search('test'), "search()" );
 
 is( $results->hits, 1, "1 hit" );
 
+is_deeply(
+    $results->property_map,
+    {   bar     => "foobar",
+        lastmod => "swishlastmodified",
+        title   => "swishtitle"
+    },
+    "property_map"
+);
+
 ok( my $result = $results->next, "next result" );
+
+#diag( dump $result->property_map );
 
 is( $result->uri, 't/test.html', 'get uri' );
 
 is( $result->title, "test html doc", "get title" );
+
+is( $result->mtime,
+    $result->get_property('lastmod'),
+    "get_property() respects aliases"
+);
 
 is( $result->relevant_fields->[0],
     "swishtitle", "relevant field == swishtitle" );
