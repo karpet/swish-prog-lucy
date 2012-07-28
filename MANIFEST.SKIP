@@ -35,4 +35,5 @@ MANIFEST.SKIP
 ^build$
 .out$
 ^t/index.swish
+^index.swish
 .tar.gz$

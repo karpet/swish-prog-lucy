@@ -22,3 +22,9 @@ t/pod.t
 t/test.conf
 t/test.html
 t/test.xml
+inc/Module/Install.pm
+inc/Module/Install/Base.pm
+inc/Module/Install/Makefile.pm
+inc/Module/Install/MakeMaker.pm
+inc/Module/Install/Metadata.pm
+inc/Module/Install/Scripts.pm
