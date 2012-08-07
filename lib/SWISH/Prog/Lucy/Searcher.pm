@@ -119,6 +119,7 @@ sub init {
     $self->{qp} ||= Search::Query::Parser->new(
         dialect          => 'Lucy',
         fields           => \%fieldtypes,
+        croak_on_error   => 1,              # strict mode on
         query_class_opts => {
             default_field => $field_names,
             debug         => $self->debug,
@@ -220,6 +221,7 @@ sub search {
 
     my $parsed_query = $self->{qp}->parse($query)
         or croak "Query syntax error: " . $self->{qp}->error;
+
     my %hits_args = (
         offset     => $start,
         num_wanted => $max,
