@@ -102,6 +102,11 @@ sub make_program {
 
 END {
     unless ( $ENV{PERL_DEBUG} ) {
-        $invindex->path->rmtree;
+        undef $searcher;
+        undef $results;
+        undef $result;
+        my $index = $invindex->path;
+        undef $invindex;
+        $index->rmtree;
     }
 }
