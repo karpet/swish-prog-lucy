@@ -74,7 +74,9 @@ sub next {
         relevant_fields => \@relevant_fields,
         doc             => $hit,
         property_map    => $_[0]->{property_map},
-        score => int( $hit->get_score * 1000 ),   # scale like xapian, swish-e
+
+        # scale like xapian, swish-e
+        score => ( int( $hit->get_score * 1000 ) || 1 ),
     );
 }
 

@@ -40,6 +40,7 @@ Revision history for SWISH-Prog-Lucy
     * add property_map to respect PropertyNameAlias params in get_property()
     * fix MANIFEST to include missing Module::Install files
 
-0.10    xxx
+0.10    23 Aug 2012
     * croak_on_error => 1 in Search::Query::Parser means invalid queries now
       generate an exception in Searcher.
+    * Result->score will always return a positive integer (score || 1)
