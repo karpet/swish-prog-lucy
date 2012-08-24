@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.10';
+our $VERSION = '0.10_01';
 
 use base qw( SWISH::Prog::Searcher );
 
