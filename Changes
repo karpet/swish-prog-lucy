@@ -47,3 +47,4 @@ Revision history for SWISH-Prog-Lucy
 
 0.11    xxx
     * refer to header meta file internally using official API method
+    * added Indexer->abort method
