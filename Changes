@@ -45,6 +45,6 @@ Revision history for SWISH-Prog-Lucy
       generate an exception in Searcher.
     * Result->score will always return a positive integer (score || 1)
 
-0.11    xxx
+0.11    3 Sept 2012
     * refer to header meta file internally using official API method
     * added Indexer->abort method

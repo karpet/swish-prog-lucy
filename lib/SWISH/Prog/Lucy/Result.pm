@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Result;
 use strict;
 use warnings;
 
-our $VERSION = '0.10_01';
+our $VERSION = '0.11';
 
 use base qw( SWISH::Prog::Result );
 use SWISH::3 ':constants';
