@@ -24,7 +24,7 @@ for my $invindex (@ARGV) {
             = $seg_reader->obtain('Lucy::Index::PostingListReader');
         for my $field (@$fields) {
             my $lexicon = $lex_reader->lexicon( field => $field );
-            while ( $lexicon->next ) {
+            while ( $lexicon && $lexicon->next ) {
                 my $seg_freq = 0;
                 my $plist    = $plist_reader->posting_list(
                     field => $field,
