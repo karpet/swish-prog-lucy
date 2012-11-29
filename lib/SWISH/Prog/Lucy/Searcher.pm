@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 use base qw( SWISH::Prog::Searcher );
 
@@ -88,10 +88,9 @@ sub init {
 
     # cache the meta file stat(), to test if it changes
     # while the searcher is open. See get_lucy()
-    $self->{swish_xml}
-        = Path::Class::File::Stat->new( $invindex->meta_file );
+    $self->{swish_xml} = Path::Class::File::Stat->new( $invindex->meta_file );
     $self->{swish_xml}->use_md5();    # slower but better
-    $self->{_uuid} = $config->Index->{UUID} || "LUCY_NO_UUID";
+    $self->{_uuid} = [ $config->Index->{UUID} || "LUCY_NO_UUID" ];
 
     # this does 2 things:
     # 1: initializes the Lucy Searcher
@@ -351,34 +350,53 @@ Returns the internal Lucy::Search::PolySearcher object.
 =cut
 
 sub get_lucy {
-    my $self = shift;
-    my $uuid = $self->invindex->[0]->meta->Index->{UUID} || $self->{_uuid};
-    if ( !$self->{lucy} ) {
+    my $self     = shift;
+    my $is_stale = 0;
+    my $i        = 0;
+    for my $idx ( @{ $self->invindex } ) {
+        my $uuid = $idx->meta->Index->{UUID} || $self->{_uuid}->[$i];
 
-        $self->debug and carp "init lucy";
-        $self->_open_lucy;
+        if ( !$self->{lucy} ) {
+
+            $self->debug and carp "[$i] init lucy";
+            $is_stale++;
+            last;
+
+        }
+        elsif ( !$self->{_uuid}->[$i] or $self->{_uuid}->[$i] ne $uuid ) {
+
+            $self->debug
+                and carp sprintf( "[$i] UUID has changed from %s to %s",
+                $self->{_uuid}->[$i], $uuid );
+
+            $is_stale++;
+
+            # recache
+            $self->{_uuid}->[$i] = $idx->meta->Index->{UUID};
+
+            # continue to next loop so _uuid cache gets fully populated
+
+        }
+        elsif ( $self->{swish_xml}->changed ) {
+
+            $self->debug and carp "[$i] MD5 sig has changed";
+            $is_stale++;
+
+            last;
+
+        }
+        else {
+
+            $self->debug and carp "[$i] re-using cached Lucy Searcher";
+
+        }
+
+        $i++;
 
     }
-    elsif ( $self->{_uuid} && $self->{_uuid} ne $uuid ) {
 
-        $self->debug and carp "UUID has changed from $self->{_uuid} to $uuid";
-        $self->_open_lucy;
+    $self->_open_lucy if $is_stale;
 
-        # recache
-        $self->{_uuid} = $self->invindex->[0]->meta->Index->{UUID};
-
-    }
-    elsif ( $self->{swish_xml}->changed ) {
-
-        $self->debug and carp "MD5 sig has changed";
-        $self->_open_lucy;
-
-    }
-    else {
-
-        $self->debug and carp "re-using cached Lucy Searcher";
-
-    }
     return $self->{lucy};
 }
 

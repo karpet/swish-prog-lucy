@@ -48,3 +48,7 @@ Revision history for SWISH-Prog-Lucy
 0.11    3 Sept 2012
     * refer to header meta file internally using official API method
     * added Indexer->abort method
+
+0.12    29 Nov 2012
+    * support stale searcher detection when multiple indexes are being searched.
+
