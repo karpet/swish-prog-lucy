@@ -82,7 +82,7 @@ You can get/set the internal parser with the qp() method as well.
 
 =item nfs_mode I<1|0>
 
-Set to true if your index sites on a NFS filesystem. Extra locking
+Set to true if your index is stored on a NFS filesystem. Extra locking
 precautions are implemented when this mode is on (1). Default is off
 (0).
 
