@@ -29,7 +29,8 @@ ok( $indexer->process($doc), "process doc" );
 is( $indexer->finish(), 1, "finish indexer with 1 total docs" );
 
 ok( my $searcher = SWISH::Prog::Lucy::Searcher->new( invindex => $invindex ),
-    "new searcher" );
+    "new searcher"
+);
 
 ok( my $results = $searcher->search(qq/swishtitle="round 1"/),
     "search for round 1" );
@@ -55,7 +56,10 @@ ok( $results = $searcher->search(qq/swishtitle="round 2"/),
 is( $results->hits, 1, "1 match" );
 
 # new searcher object should find the same thing
-ok( my $searcher2 = SWISH::Prog::Lucy::Searcher->new( invindex => $invindex ),
+ok( my $searcher2 = SWISH::Prog::Lucy::Searcher->new(
+        invindex => $invindex,
+        nfs_mode => 1,  # exercise code but not failure conditions
+    ),
     "new searcher2"
 );
 ok( $results = $searcher2->search(qq/swishtitle="round 2"/),

@@ -52,3 +52,7 @@ Revision history for SWISH-Prog-Lucy
 0.12    29 Nov 2012
     * support stale searcher detection when multiple indexes are being searched.
 
+0.13    30 Jan 2013
+    * add Searcher->nfs_mode so that manager logic is optional. Feature has
+      been in there since 0.08 but not needed unless we are running under NFS.
+

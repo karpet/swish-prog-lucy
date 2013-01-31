@@ -2,14 +2,14 @@ package SWISH::Prog::Lucy::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 use base qw( SWISH::Prog::Searcher );
 
 use Carp;
 use SWISH::3 qw( :constants );
 use SWISH::Prog::Lucy::Results;
-use Sys::Hostname qw( hostname );
+
 use Lucy::Search::IndexSearcher;
 use Lucy::Search::PolySearcher;
 use Lucy::Analysis::PolyAnalyzer;
@@ -17,11 +17,16 @@ use Lucy::Search::SortRule;
 use Lucy::Search::SortSpec;
 use Path::Class::File::Stat;
 use Data::Dump qw( dump );
+
+# these 2 for nfs_mode==1
+use Sys::Hostname qw( hostname );
+use Time::HiRes qw( usleep );
+
 use Sort::SQL;
 use Search::Query;
 use Search::Query::Dialect::Lucy;
 
-__PACKAGE__->mk_accessors(qw( find_relevant_fields qp ));
+__PACKAGE__->mk_accessors(qw( find_relevant_fields qp nfs_mode ));
 
 =head1 NAME
 
@@ -33,6 +38,7 @@ SWISH::Prog::Lucy::Searcher - search Swish3 Lucy backend
      invindex             => 'path/to/index',
      max_hits             => 1000,
      find_relevant_fields => 1,   # default: 0
+     nfs_mode             => 1,   # default: 0
  );
                 
  my $results = $searcher->search( 'foo bar' );
@@ -74,6 +80,12 @@ that matched the query. Default is 0 (off).
 Optional. If passed, should be a Search::Query::Parser object.
 You can get/set the internal parser with the qp() method as well.
 
+=item nfs_mode I<1|0>
+
+Set to true if your index sites on a NFS filesystem. Extra locking
+precautions are implemented when this mode is on (1). Default is off
+(0).
+
 =back
 
 =cut
@@ -81,6 +93,8 @@ You can get/set the internal parser with the qp() method as well.
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);
+
+    $self->nfs_mode(0) unless defined $self->nfs_mode();
 
     # load meta from the first invindex
     my $invindex = $self->invindex->[0];
@@ -403,15 +417,47 @@ sub get_lucy {
 sub _open_lucy {
     my $self = shift;
     my @searchers;
-    my $hostname = hostname() or croak "Can't get unique hostname";
-    my $manager = Lucy::Index::IndexManager->new( host => $hostname );
-    for my $idx ( @{ $self->invindex } ) {
-        my $reader = Lucy::Index::IndexReader->open(
-            index   => "$idx",
-            manager => $manager,
-        );
-        my $searcher = Lucy::Search::IndexSearcher->new( index => $reader, );
-        push @searchers, $searcher;
+    if ( $self->nfs_mode ) {
+        my $hostname = hostname() or croak "Can't get unique hostname";
+        my $manager = Lucy::Index::IndexManager->new( host => $hostname );
+        my $tries = 0;
+        for my $idx ( @{ $self->invindex } ) {
+            my $searcher;
+            my $err;
+            while ( !$searcher ) {
+                eval {
+                    # PolyReader->open is undocumented
+                    # but Marvin suggests it to avoid
+                    # a memory leak on multiple attempts
+                    my $reader = Lucy::Index::PolyReader->open(
+                        index   => "$idx",
+                        manager => $manager,
+                    );
+                    $searcher
+                        = Lucy::Search::IndexSearcher->new( index => $reader,
+                        );
+                };
+                if ($@) {
+                    usleep(100);    # milliseconds before trying again.
+                    $tries++;
+                    $err = $@;
+                }
+                last if $tries >= 20;    # total of 2 seconds
+            }
+            if ($searcher) {
+                push @searchers, $searcher;
+            }
+            else {
+                croak "Failed to open Searcher for $idx: $err";
+            }
+        }
+    }
+    else {
+        for my $idx ( @{ $self->invindex } ) {
+            my $searcher
+                = Lucy::Search::IndexSearcher->new( index => "$idx" );
+            push @searchers, $searcher;
+        }
     }
 
     # assume all the schemas are identical.
