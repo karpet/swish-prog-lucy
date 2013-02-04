@@ -56,6 +56,6 @@ Revision history for SWISH-Prog-Lucy
     * add Searcher->nfs_mode so that manager logic is optional. Feature has
       been in there since 0.08 but not needed unless we are running under NFS.
 
-0.14    xxx
+0.14    04 Feb 2013
     * include built-in swish* properties as search-able fields.
 

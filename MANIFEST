@@ -1,5 +1,11 @@
-Changes
 bin/lucyx-dump-terms
+Changes
+inc/Module/Install.pm
+inc/Module/Install/Base.pm
+inc/Module/Install/Makefile.pm
+inc/Module/Install/MakeMaker.pm
+inc/Module/Install/Metadata.pm
+inc/Module/Install/Scripts.pm
 lib/SWISH/Prog/Lucy.pm
 lib/SWISH/Prog/Lucy/Indexer.pm
 lib/SWISH/Prog/Lucy/InvIndex.pm
@@ -8,6 +14,9 @@ lib/SWISH/Prog/Lucy/Results.pm
 lib/SWISH/Prog/Lucy/Searcher.pm
 Makefile.PL
 MANIFEST
+META.yml
+MYMETA.json
+MYMETA.yml
 README
 t/00-load.t
 t/01-fs.t
@@ -22,9 +31,3 @@ t/pod.t
 t/test.conf
 t/test.html
 t/test.xml
-inc/Module/Install.pm
-inc/Module/Install/Base.pm
-inc/Module/Install/Makefile.pm
-inc/Module/Install/MakeMaker.pm
-inc/Module/Install/Metadata.pm
-inc/Module/Install/Scripts.pm
