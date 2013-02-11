@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Indexer;
 use strict;
 use warnings;
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 use base qw( SWISH::Prog::Indexer );
 use SWISH::Prog::Lucy::InvIndex;
@@ -108,7 +108,6 @@ sub init {
 
     # 3. via 'config' param passed to this method
     if ( exists $self->{config} ) {
-
         # this utility method defined in base SWISH::Prog::Indexer class.
         $self->_verify_swish3_config();
     }

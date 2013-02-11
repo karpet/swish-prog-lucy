@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 use base qw( SWISH::Prog::Searcher );
 
@@ -26,7 +26,8 @@ use Sort::SQL;
 use Search::Query;
 use Search::Query::Dialect::Lucy;
 
-__PACKAGE__->mk_accessors(qw( find_relevant_fields qp nfs_mode ));
+__PACKAGE__->mk_accessors(
+    qw( find_relevant_fields qp qp_config nfs_mode ));
 
 =head1 NAME
 
@@ -80,6 +81,11 @@ that matched the query. Default is 0 (off).
 Optional. If passed, should be a Search::Query::Parser object.
 You can get/set the internal parser with the qp() method as well.
 
+=item qp_config I<hash_ref>
+
+Optional. If set, the internal Search::Query::Parser object
+will be initialized with I<hash_ref>.
+
 =item nfs_mode I<1|0>
 
 Set to true if your index is stored on a NFS filesystem. Extra locking
@@ -96,6 +102,26 @@ sub init {
 
     $self->nfs_mode(0) unless defined $self->nfs_mode();
 
+    $self->{qp_config} ||= {
+        dialect          => 'Lucy',
+        croak_on_error   => 1,                            # strict mode on
+        query_class_opts => { debug => $self->debug, },
+    };
+
+    if ( $self->{qp} ) {
+
+        # preserve passed-in object for duration
+        $self->{_initial_qp} = $self->{qp};
+    }
+
+    $self->_init_lucy();
+
+    return $self;
+}
+
+sub _init_lucy {
+    my $self = shift;
+
     # load meta from the first invindex
     my $invindex = $self->invindex->[0];
     my $config   = $invindex->meta;
@@ -104,7 +130,7 @@ sub init {
     # while the searcher is open. See get_lucy()
     $self->{swish_xml} = Path::Class::File::Stat->new( $invindex->meta_file );
     $self->{swish_xml}->use_md5();    # slower but better
-    $self->{_uuid} = [ $config->Index->{UUID} || "LUCY_NO_UUID" ];
+    $self->{_uuid} ||= [ $config->Index->{UUID} || "LUCY_NO_UUID" ];
 
     # this does 2 things:
     # 1: initializes the Lucy Searcher
@@ -130,15 +156,21 @@ sub init {
     $self->{_pure_props} = $config->get_pure_properties;
     $self->{_prop_map}   = $config->get_property_map;
 
-    $self->{qp} ||= Search::Query::Parser->new(
-        dialect          => 'Lucy',
-        fields           => \%fieldtypes,
-        croak_on_error   => 1,              # strict mode on
-        query_class_opts => {
-            default_field => $field_names,
-            debug         => $self->debug,
+    if ( !$self->{_initial_qp} ) {
+
+        my %qp_config = %{ $self->qp_config };
+        if ( !exists $qp_config{fields} ) {
+            $qp_config{fields} = \%fieldtypes;
         }
-    );
+        if ( !exists $qp_config{query_class_opts}->{default_field} ) {
+            $qp_config{query_class_opts}->{default_field} = $field_names;
+        }
+
+        $self->{qp} = Search::Query::Parser->new( %qp_config, );
+    }
+    else {
+        $self->{qp} = $self->{_initial_qp};
+    }
 
     return $self;
 }
@@ -410,7 +442,10 @@ sub get_lucy {
 
     }
 
-    $self->_open_lucy if $is_stale;
+    if ($is_stale) {
+        $self->_open_lucy;
+        $self->_init_lucy();
+    }
 
     return $self->{lucy};
 }
