@@ -59,7 +59,7 @@ Revision history for SWISH-Prog-Lucy
 0.14    04 Feb 2013
     * include built-in swish* properties as search-able fields.
 
-0.15    xxx
+0.15    10 Feb 2013
     * refactored internal initialization of query parser, adding qp_config
       option to constructor. This should solve the issue when UndefinedMetaTags is
       set to 'auto' in the Indexer, and additional fields are added to an
