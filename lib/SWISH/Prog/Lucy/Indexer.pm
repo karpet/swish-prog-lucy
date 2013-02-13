@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Indexer;
 use strict;
 use warnings;
 
-our $VERSION = '0.15';
+our $VERSION = '0.16';
 
 use base qw( SWISH::Prog::Indexer );
 use SWISH::Prog::Lucy::InvIndex;
@@ -108,6 +108,7 @@ sub init {
 
     # 3. via 'config' param passed to this method
     if ( exists $self->{config} ) {
+
         # this utility method defined in base SWISH::Prog::Indexer class.
         $self->_verify_swish3_config();
     }
@@ -307,7 +308,7 @@ sub init {
 }
 
 sub _add_new_field {
-    my ( $self, $metaname ) = @_;
+    my ( $self, $metaname, $propname ) = @_;
     my $fields = $self->{_fields};
     my $alias  = $metaname->alias_for;
     my $name   = $metaname->name;
@@ -320,7 +321,14 @@ sub _add_new_field {
     $field->{bias}              = $metaname->bias;
     $field->{store_as}->{$name} = 1;
 
+    if ($propname) {
+        my $prop_alias = $propname->alias_for;
+        $field->{is_prop}       = 1;
+        $field->{is_prop_alias} = $prop_alias;
+    }
+
     # a newly defined MetaName matching an already-defined PropertyName
+    # or a new MetaName+PropertyName
     if ( $field->{is_prop} ) {
         $self->{__lucy}->{schema}->spec_field(
             name => $name,
@@ -397,7 +405,11 @@ sub _handler {
         if ( !exists $fields->{$mname} ) {
 
             #warn "New field: $mname\n";
-            $self->_add_new_field( $conf_metas->get($mname) );
+            my $prop;
+            if ( exists $props->{$mname} ) {
+                $prop = $conf_props->get($mname);
+            }
+            $self->_add_new_field( $conf_metas->get($mname), $prop );
         }
     }
 

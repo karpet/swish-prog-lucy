@@ -65,4 +65,7 @@ Revision history for SWISH-Prog-Lucy
       set to 'auto' in the Indexer, and additional fields are added to an
       existing index.
 
+0.16    12 Feb 2013
+    * support UndefinedMetaTags 'autoall' for adding PropertyNames as well as 
+      MetaNames dynamically. Requires SWISH::3 1.000006.
 
