@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Indexer;
 use strict;
 use warnings;
 
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
 use base qw( SWISH::Prog::Indexer );
 use SWISH::Prog::Lucy::InvIndex;
@@ -325,6 +325,9 @@ sub _add_new_field {
         my $prop_alias = $propname->alias_for;
         $field->{is_prop}       = 1;
         $field->{is_prop_alias} = $prop_alias;
+        if ( $propname->sort ) {
+            $field->{sortable} = 1;
+        }
     }
 
     # a newly defined MetaName matching an already-defined PropertyName

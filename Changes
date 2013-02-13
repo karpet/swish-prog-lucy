@@ -69,3 +69,6 @@ Revision history for SWISH-Prog-Lucy
     * support UndefinedMetaTags 'autoall' for adding PropertyNames as well as 
       MetaNames dynamically. Requires SWISH::3 1.000006.
 
+0.17    12 Feb 2013
+    * fix bug in dynamically-added PropertyNames where sortable flag was not turned on.
+
