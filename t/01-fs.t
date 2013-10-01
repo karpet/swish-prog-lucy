@@ -161,7 +161,7 @@ ok( my $results_relevant = $searcher->search('2009*'), "search for 2009*" );
 while ( my $rr = $results_relevant->next ) {
     my $f = $rr->relevant_fields;
 
-    #diag( $rr->uri . ' : ' . dump $f );
+    diag( $rr->uri . ' : ' . dump $f );
     is( scalar @$f, 2, "2 relevant fields" );
     is_deeply( $f, [ "timestamp", "date" ], "got relevant fields in order" );
 }
