@@ -1,7 +1,8 @@
 Revision history for SWISH-Prog-Lucy
 
-0.18 xxx
- - packaging clean up only
+0.18 4 Oct 2013
+ - packaging clean up 
+ - bump dependency on LucyX::Search::WildcardQuery 
 
 0.17 12 Feb 2013
  - fix bug in dynamically-added PropertyNames where sortable flag was not
