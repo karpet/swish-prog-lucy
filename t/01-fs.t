@@ -171,11 +171,11 @@ while ( my $rr = $results_relevant->next ) {
 
 sub make_program {
     ok( my $program = SWISH::Prog->new(
-            invindex             => $invindex,
-            aggregator           => 'fs',
-            indexer              => 'lucy',
-            config               => 't/config.xml',
-            highlightable_fields => 1,
+            invindex     => $invindex,
+            aggregator   => 'fs',
+            indexer      => 'lucy',
+            config       => 't/config.xml',
+            indexer_opts => { highlightable_fields => 1, },
 
             #verbose    => 1,
             #debug      => 1,

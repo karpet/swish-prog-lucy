@@ -79,7 +79,7 @@ sub make_program {
             indexer    => 'lucy',
             config =>
                 ( $use_stemmer ? 't/config.xml' : 't/config-nostemmer.xml' ),
-            highlightable_fields => 1,
+            indexer_opts => { highlightable_fields => 1, },
 
             #verbose    => 1,
             #debug      => 1,

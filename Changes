@@ -1,5 +1,8 @@
 Revision history for SWISH-Prog-Lucy
 
+0.19 xxx
+ - fix tests for change in SWISH::Prog 0.75
+
 0.18 4 Oct 2013
  - packaging clean up 
  - bump dependency on LucyX::Search::WildcardQuery 
