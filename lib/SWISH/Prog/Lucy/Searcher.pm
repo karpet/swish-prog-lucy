@@ -26,8 +26,7 @@ use Sort::SQL;
 use Search::Query;
 use Search::Query::Dialect::Lucy;
 
-__PACKAGE__->mk_accessors(
-    qw( find_relevant_fields qp qp_config nfs_mode ));
+__PACKAGE__->mk_accessors(qw( find_relevant_fields qp qp_config nfs_mode ));
 
 =head1 NAME
 
@@ -367,6 +366,9 @@ sub search {
 
     # turn the Search::Query object into a Lucy object
     $hits_args{query} = $parsed_query->as_lucy_query;
+    if ( !$hits_args{query} ) {
+        croak "Failed to turn '$parsed_query' into a Lucy query";
+    }
     my $lucy = $self->get_lucy();
     $self->debug
         and carp sprintf(
