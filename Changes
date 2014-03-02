@@ -1,5 +1,8 @@
 Revision history for SWISH-Prog-Lucy
 
+0.20 xxx
+ - check for undef query returned by Search::Query::Parser
+
 0.19 13 Dec 2013
  - fix tests for change in SWISH::Prog 0.75
 

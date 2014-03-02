@@ -366,7 +366,7 @@ sub search {
 
     # turn the Search::Query object into a Lucy object
     $hits_args{query} = $parsed_query->as_lucy_query;
-    if ( !$hits_args{query} ) {
+    if ( !defined $hits_args{query} ) {
         croak "Failed to turn '$parsed_query' into a Lucy query";
     }
     my $lucy = $self->get_lucy();
