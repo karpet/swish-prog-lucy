@@ -1,5 +1,8 @@
 Revision history for SWISH-Prog-Lucy
 
+0.21 xxx
+ - add 'id' attribute to Searcher, Results, Result
+
 0.20 02 March 2014
  - check for undef query returned by Search::Query::Parser
 

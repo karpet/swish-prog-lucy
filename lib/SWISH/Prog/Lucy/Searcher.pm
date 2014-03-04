@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.20';
+our $VERSION = '0.20_01';
 
 use base qw( SWISH::Prog::Searcher );
 
@@ -385,11 +385,30 @@ sub search {
         query                => $parsed_query,
         find_relevant_fields => $self->find_relevant_fields,
         property_map         => $self->{_prop_map},
+        id                   => $self->get_unique_id,
     );
     $results->{_compiler} = $compiler;
     $results->{_searcher} = $lucy;
     $results->{_args}     = \%hits_args;
     return $results;
+}
+
+=head2 get_unique_id
+
+Returns string of all concatenated UUID values from the Searcher's invindex meta
+descriptions.
+
+=cut
+
+sub get_unique_id {
+    my $self = shift;
+    my @uuids;
+    my $i = 0;
+    for my $idx ( @{ $self->invindex } ) {
+        push @uuids,
+            ( $idx->meta->Index->{UUID} || $self->{_uuid}->[ $i++ ] );
+    }
+    return join( ',', @uuids );
 }
 
 =head2 get_lucy

@@ -2,13 +2,13 @@ package SWISH::Prog::Lucy::Result;
 use strict;
 use warnings;
 
-our $VERSION = '0.20';
+our $VERSION = '0.20_01';
 
 use base qw( SWISH::Prog::Result );
 use SWISH::3 ':constants';
 use Carp;
 
-__PACKAGE__->mk_accessors(qw( relevant_fields property_map ));
+__PACKAGE__->mk_accessors(qw( id relevant_fields property_map ));
 
 =head1 NAME
 
@@ -93,6 +93,10 @@ sub get_property {
 
 Get the read-only hashref of PropertyNameAlias to PropertyName
 values.
+
+=head2 id
+
+Get the read-only unique id from parent Searcher.
 
 =cut
 
