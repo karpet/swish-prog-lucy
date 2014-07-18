@@ -22,6 +22,9 @@ t/02-leak-trace.t
 t/03-update-index.t
 t/04-auto-reconnect-searcher.t
 t/05-stemmer.t
+t/06-fields.t
+t/fields.conf
+t/fields.xml
 t/config-nostemmer.xml
 t/config.xml
 t/pod-coverage.t

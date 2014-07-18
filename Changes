@@ -1,6 +1,6 @@
 Revision history for SWISH-Prog-Lucy
 
-0.21 xxx
+0.21 18 July 2014
  - add 'id' attribute to Searcher, Results, Result
  - add fields support for PropertyNamesCompareCase, PropertyNamesIgnoreCase,
    and better delineation of what it means to define a field as a PropertyName 

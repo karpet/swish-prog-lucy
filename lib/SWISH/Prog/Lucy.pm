@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy;
 use strict;
 use warnings;
 
-our $VERSION = '0.20_01';
+our $VERSION = '0.21';
 
 =head1 NAME
 
