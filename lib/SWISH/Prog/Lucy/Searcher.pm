@@ -137,10 +137,12 @@ sub _init_lucy {
     my $schema = $self->get_lucy()->get_schema();
 
     my $metanames   = $config->MetaNames;
-    my $field_names = [ keys %$metanames ];
+    my $propnames   = $config->PropertyNames;
+    my $field_names = [ keys %$metanames, keys %$propnames ];
     my %fieldtypes;
     my $doc_prop_map = SWISH_DOC_PROP_MAP();
     for my $name ( ( @$field_names, keys %$doc_prop_map ) ) {
+        next if exists $fieldtypes{$name};
         $fieldtypes{$name} = {
             type     => $schema->fetch_type($name),
             analyzer => $schema->fetch_analyzer($name)
@@ -170,6 +172,8 @@ sub _init_lucy {
     else {
         $self->{qp} = $self->{_initial_qp};
     }
+
+    $self->debug and warn dump $self;
 
     return $self;
 }
