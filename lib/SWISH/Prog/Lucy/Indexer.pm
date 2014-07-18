@@ -120,16 +120,23 @@ sub init {
     my $lang   = $config->get_index->get( SWISH_INDEX_STEMMER_LANG() )
         || 'none';
     $self->{_lang} = $lang;    # cache for finish()
-    my $schema = Lucy::Plan::Schema->new();
-    my $analyzer;
+    my $schema      = Lucy::Plan::Schema->new();
+    my $analyzers   = {};
+    my $case_folder = Lucy::Analysis::CaseFolder->new;
+    my $tokenizer   = Lucy::Analysis::RegexTokenizer->new;
+
+    # stemming means we fold case and tokenize too.
     if ( $lang and $lang =~ m/^\w\w$/ ) {
-        $analyzer = Lucy::Analysis::PolyAnalyzer->new( language => $lang, );
+        $analyzers->{fulltext_lc}
+            = Lucy::Analysis::PolyAnalyzer->new( language => $lang, );
+        $analyzers->{store_lc} = $case_folder;
+        $analyzers->{fulltext} = $tokenizer;     # TODO stem?
     }
     else {
-        my $case_folder = Lucy::Analysis::CaseFolder->new;
-        my $tokenizer   = Lucy::Analysis::RegexTokenizer->new;
-        $analyzer = Lucy::Analysis::PolyAnalyzer->new(
+        $analyzers->{fulltext_lc} = Lucy::Analysis::PolyAnalyzer->new(
             analyzers => [ $case_folder, $tokenizer, ], );
+        $analyzers->{store_lc} = $case_folder;
+        $analyzers->{fulltext} = $tokenizer;
     }
 
     # build the Lucy fields, which are a merger of MetaNames+PropertyNames
@@ -165,6 +172,9 @@ sub init {
         if ( $property->sort ) {
             $fields{$name}->{sortable} = 1;
         }
+        for my $attr (qw( ignore_case verbatim max )) {
+            $fields{$name}->{$attr} = $property->$attr;
+        }
     }
 
     $self->{_fields} = \%fields;
@@ -199,7 +209,7 @@ sub init {
             $schema->spec_field(
                 name => $name,
                 type => Lucy::Plan::FullTextType->new(
-                    analyzer      => $analyzer,
+                    analyzer      => $analyzers->{fulltext_lc},
                     stored        => 0,
                     boost         => $field->{bias} || 1.0,
                     highlightable => $self->highlightable_fields,
@@ -212,6 +222,8 @@ sub init {
         # and a real for the other.
         # NOTE we have already eliminated (above) the case where
         # the field is an alias for both.
+        #
+        # NOTE metaname==1 means we tokenize contents
         elsif ( $field->{is_meta} and $field->{is_prop} ) {
             if ( defined $field->{is_meta_alias} ) {
                 $key = $field->{is_meta_alias};
@@ -222,7 +234,11 @@ sub init {
                 $field->{store_as}->{$key} = 1;
             }
 
-            #warn "spec meta+prop $name";
+            #warn "spec meta+prop $name" . dump($field);
+            my $analyzer = $analyzers->{fulltext_lc};
+            if ( !$field->{ignore_case} ) {
+                $analyzer = $analyzers->{fulltext};
+            }
             $schema->spec_field(
                 name => $name,
                 type => Lucy::Plan::FullTextType->new(
@@ -244,9 +260,22 @@ sub init {
             }
 
             #warn "spec prop !sort $name";
+            my $type = $store_no_sort;
+            if ( $field->{ignore_case} ) {
+
+                # if StringType has no analyzer
+                # so we must switch to FullTextType and
+                # use a case-folding-only analyzer.
+                $type = Lucy::Plan::FullTextType->new(
+                    analyzer      => $analyzers->{store_lc},
+                    highlightable => $self->highlightable_fields,
+                    sortable      => 0,
+                    boost         => $field->{bias} || 1.0,
+                );
+            }
             $schema->spec_field(
                 name => $name,
-                type => $store_no_sort
+                type => $type,
             );
         }
         elsif (!$field->{is_meta}
@@ -260,9 +289,22 @@ sub init {
             }
 
             #warn "spec prop sort $name";
+            my $type = $property_only;
+            if ( $field->{ignore_case} ) {
+
+                # if StringType has no analyzer
+                # so we must switch to FullTextType and
+                # use a case-folding-only analyzer.
+                $type = Lucy::Plan::FullTextType->new(
+                    analyzer      => $analyzers->{store_lc},
+                    highlightable => $self->highlightable_fields,
+                    sortable      => 1,
+                    boost         => $field->{bias} || 1.0,
+                );
+            }
             $schema->spec_field(
                 name => $name,
-                type => $property_only
+                type => $type,
             );
         }
         $field->{store_as}->{$name} = 1;
@@ -301,7 +343,7 @@ sub init {
 
     # cache our objects in case we later
     # need to create any fields on-the-fly
-    $self->{__lucy}->{analyzer} = $analyzer;
+    $self->{__lucy}->{analyzer} = $analyzers;
     $self->{__lucy}->{schema}   = $schema;
 
     return $self;
@@ -328,6 +370,9 @@ sub _add_new_field {
         if ( $propname->sort ) {
             $field->{sortable} = 1;
         }
+        for my $attr (qw( ignore_case verbatim max )) {
+            $field->{$attr} = $propname->$attr;
+        }
     }
 
     # a newly defined MetaName matching an already-defined PropertyName
@@ -336,7 +381,11 @@ sub _add_new_field {
         $self->{__lucy}->{schema}->spec_field(
             name => $name,
             type => Lucy::Plan::FullTextType->new(
-                analyzer      => $self->{__lucy}->{analyzer},
+                analyzer => (
+                      $field->{ignore_case}
+                    ? $self->{__lucy}->{analyzer}->{fulltext_lc}
+                    : $self->{__lucy}->{analyzer}->{fulltext}
+                ),
                 highlightable => $self->highlightable_fields,
                 sortable      => $field->{sortable},
                 boost         => $field->{bias} || 1.0,
@@ -350,7 +399,7 @@ sub _add_new_field {
         $self->{__lucy}->{schema}->spec_field(
             name => $name,
             type => Lucy::Plan::FullTextType->new(
-                analyzer      => $self->{__lucy}->{analyzer},
+                analyzer      => $self->{__lucy}->{analyzer}->{fulltext_lc},
                 stored        => 0,
                 boost         => $field->{bias} || 1.0,
                 highlightable => $self->highlightable_fields,

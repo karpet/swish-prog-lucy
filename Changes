@@ -2,6 +2,9 @@ Revision history for SWISH-Prog-Lucy
 
 0.21 xxx
  - add 'id' attribute to Searcher, Results, Result
+ - add fields support for PropertyNamesCompareCase, PropertyNamesIgnoreCase,
+   and better delineation of what it means to define a field as a PropertyName 
+   but not a MetaName (store but do not tokenize)
 
 0.20 02 March 2014
  - check for undef query returned by Search::Query::Parser

@@ -189,6 +189,7 @@ sub make_program {
     $program->config->FileRules( 'filename is config.xml',               1 );
     $program->config->FileRules( 'filename is config-nostemmer.xml',     1 );
     $program->config->FileRules( 'filename contains \.t',                1 );
+    $program->config->FileRules( 'filename is fields.xml',               1 );
     $program->config->FileRules( 'dirname contains (testindex|\.index)', 1 );
     $program->config->FileRules( 'filename contains \.conf',             1 );
     $program->config->FileRules( 'dirname contains mailfs',              1 );
