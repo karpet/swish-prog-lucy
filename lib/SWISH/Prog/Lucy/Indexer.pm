@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Indexer;
 use strict;
 use warnings;
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 use base qw( SWISH::Prog::Indexer );
 use SWISH::Prog::Lucy::InvIndex;
@@ -127,10 +127,14 @@ sub init {
 
     # stemming means we fold case and tokenize too.
     if ( $lang and $lang =~ m/^\w\w$/ ) {
+        my $stemmer
+            = Lucy::Analysis::SnowballStemmer->new( language => $lang );
         $analyzers->{fulltext_lc}
-            = Lucy::Analysis::PolyAnalyzer->new( language => $lang, );
+            = Lucy::Analysis::PolyAnalyzer->new(
+            analyzers => [ $case_folder, $tokenizer, $stemmer ] );
         $analyzers->{store_lc} = $case_folder;
-        $analyzers->{fulltext} = $tokenizer;     # TODO stem?
+        $analyzers->{fulltext} = Lucy::Analysis::PolyAnalyzer->new(
+            analyzers => [ $tokenizer, $stemmer ] );
     }
     else {
         $analyzers->{fulltext_lc} = Lucy::Analysis::PolyAnalyzer->new(
@@ -263,7 +267,7 @@ sub init {
             my $type = $store_no_sort;
             if ( $field->{ignore_case} ) {
 
-                # if StringType has no analyzer
+                # StringType has no analyzer
                 # so we must switch to FullTextType and
                 # use a case-folding-only analyzer.
                 $type = Lucy::Plan::FullTextType->new(

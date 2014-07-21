@@ -1,5 +1,9 @@
 Revision history for SWISH-Prog-Lucy
 
+0.22 21 July 2014
+ - fix regression introduced in 0.21 where case-sensitive fulltext fields
+    with stemming on were not stemmed.
+
 0.21 18 July 2014
  - add 'id' attribute to Searcher, Results, Result
  - add fields support for PropertyNamesCompareCase, PropertyNamesIgnoreCase,
