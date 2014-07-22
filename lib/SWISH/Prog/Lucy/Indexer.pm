@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Indexer;
 use strict;
 use warnings;
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 use base qw( SWISH::Prog::Indexer );
 use SWISH::Prog::Lucy::InvIndex;
@@ -124,24 +124,37 @@ sub init {
     my $analyzers   = {};
     my $case_folder = Lucy::Analysis::CaseFolder->new;
     my $tokenizer   = Lucy::Analysis::RegexTokenizer->new;
+    my $multival_tokenizer
+        = Lucy::Analysis::RegexTokenizer->new(
+        pattern => '[^' . SWISH_TOKENPOS_BUMPER() . ']+' );
+
+    # mimic StringType fields that require case and/or multival parsing.
+    $analyzers->{store_lc} = Lucy::Analysis::PolyAnalyzer->new(
+        analyzers => [ $multival_tokenizer, $case_folder ] );
+    $analyzers->{store} = $multival_tokenizer;
 
     # stemming means we fold case and tokenize too.
     if ( $lang and $lang =~ m/^\w\w$/ ) {
         my $stemmer
             = Lucy::Analysis::SnowballStemmer->new( language => $lang );
         $analyzers->{fulltext_lc}
-            = Lucy::Analysis::PolyAnalyzer->new(
-            analyzers => [ $case_folder, $tokenizer, $stemmer ] );
-        $analyzers->{store_lc} = $case_folder;
+            = Lucy::Analysis::PolyAnalyzer->new( analyzers =>
+                [ $multival_tokenizer, $case_folder, $tokenizer, $stemmer ] );
         $analyzers->{fulltext} = Lucy::Analysis::PolyAnalyzer->new(
-            analyzers => [ $tokenizer, $stemmer ] );
+            analyzers => [ $multival_tokenizer, $tokenizer, $stemmer ] );
     }
     else {
-        $analyzers->{fulltext_lc} = Lucy::Analysis::PolyAnalyzer->new(
-            analyzers => [ $case_folder, $tokenizer, ], );
-        $analyzers->{store_lc} = $case_folder;
-        $analyzers->{fulltext} = $tokenizer;
+        $analyzers->{fulltext_lc}
+            = Lucy::Analysis::PolyAnalyzer->new(
+            analyzers => [ $multival_tokenizer, $case_folder, $tokenizer, ],
+            );
+        $analyzers->{fulltext} = Lucy::Analysis::PolyAnalyzer->new(
+            analyzers => [ $multival_tokenizer, $tokenizer ] );
     }
+
+    # cache our objects for later
+    $self->{__lucy}->{analyzers} = $analyzers;
+    $self->{__lucy}->{schema}    = $schema;
 
     # build the Lucy fields, which are a merger of MetaNames+PropertyNames
     my %fields;
@@ -264,19 +277,20 @@ sub init {
             }
 
             #warn "spec prop !sort $name";
-            my $type = $store_no_sort;
+            my $an_key = 'store';
             if ( $field->{ignore_case} ) {
-
-                # StringType has no analyzer
-                # so we must switch to FullTextType and
-                # use a case-folding-only analyzer.
-                $type = Lucy::Plan::FullTextType->new(
-                    analyzer      => $analyzers->{store_lc},
-                    highlightable => $self->highlightable_fields,
-                    sortable      => 0,
-                    boost         => $field->{bias} || 1.0,
-                );
+                $an_key = 'store_lc';
             }
+
+            # StringType has no analyzer
+            # so we must switch to FullTextType and
+            # use a case-folding-only analyzer.
+            my $type = Lucy::Plan::FullTextType->new(
+                analyzer      => $analyzers->{$an_key},
+                highlightable => $self->highlightable_fields,
+                sortable      => 0,
+                boost         => $field->{bias} || 1.0,
+            );
             $schema->spec_field(
                 name => $name,
                 type => $type,
@@ -293,19 +307,20 @@ sub init {
             }
 
             #warn "spec prop sort $name";
-            my $type = $property_only;
+            my $an_key = 'store';
             if ( $field->{ignore_case} ) {
-
-                # if StringType has no analyzer
-                # so we must switch to FullTextType and
-                # use a case-folding-only analyzer.
-                $type = Lucy::Plan::FullTextType->new(
-                    analyzer      => $analyzers->{store_lc},
-                    highlightable => $self->highlightable_fields,
-                    sortable      => 1,
-                    boost         => $field->{bias} || 1.0,
-                );
+                $an_key = 'store_lc';
             }
+
+            # if StringType has no analyzer
+            # so we must switch to FullTextType and
+            # use a case-folding-only analyzer.
+            my $type = Lucy::Plan::FullTextType->new(
+                analyzer      => $analyzers->{$an_key},
+                highlightable => $self->highlightable_fields,
+                sortable      => 1,
+                boost         => $field->{bias} || 1.0,
+            );
             $schema->spec_field(
                 name => $name,
                 type => $type,
@@ -345,11 +360,6 @@ sub init {
         manager => $manager,
     );
 
-    # cache our objects in case we later
-    # need to create any fields on-the-fly
-    $self->{__lucy}->{analyzer} = $analyzers;
-    $self->{__lucy}->{schema}   = $schema;
-
     return $self;
 }
 
@@ -387,8 +397,8 @@ sub _add_new_field {
             type => Lucy::Plan::FullTextType->new(
                 analyzer => (
                       $field->{ignore_case}
-                    ? $self->{__lucy}->{analyzer}->{fulltext_lc}
-                    : $self->{__lucy}->{analyzer}->{fulltext}
+                    ? $self->{__lucy}->{analyzers}->{fulltext_lc}
+                    : $self->{__lucy}->{analyzers}->{fulltext}
                 ),
                 highlightable => $self->highlightable_fields,
                 sortable      => $field->{sortable},
@@ -403,7 +413,7 @@ sub _add_new_field {
         $self->{__lucy}->{schema}->spec_field(
             name => $name,
             type => Lucy::Plan::FullTextType->new(
-                analyzer      => $self->{__lucy}->{analyzer}->{fulltext_lc},
+                analyzer      => $self->{__lucy}->{analyzers}->{fulltext_lc},
                 stored        => 0,
                 boost         => $field->{bias} || 1.0,
                 highlightable => $self->highlightable_fields,

@@ -1,5 +1,8 @@
 Revision history for SWISH-Prog-Lucy
 
+0.23 xxx
+ - improve support for multi-value fields
+
 0.22 21 July 2014
  - fix regression introduced in 0.21 where case-sensitive fulltext fields
     with stemming on were not stemmed.
