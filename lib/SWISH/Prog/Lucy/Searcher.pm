@@ -2,7 +2,7 @@ package SWISH::Prog::Lucy::Searcher;
 use strict;
 use warnings;
 
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 
 use base qw( SWISH::Prog::Searcher );
 
@@ -381,9 +381,10 @@ sub search {
         dump( $hits_args{query}->dump() ),
         dump( \%hits_args )
         );
-    my $compiler = $hits_args{query}->make_compiler( searcher => $lucy );
-    my $hits     = $lucy->hits(%hits_args);
-    my $results  = SWISH::Prog::Lucy::Results->new(
+    my $compiler
+        = $hits_args{query}->make_compiler( searcher => $lucy, boost => 0 );
+    my $hits    = $lucy->hits(%hits_args);
+    my $results = SWISH::Prog::Lucy::Results->new(
         hits                 => $hits->total_hits + 0,
         lucy_hits            => $hits,
         query                => $parsed_query,

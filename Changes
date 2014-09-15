@@ -1,5 +1,8 @@
 Revision history for SWISH-Prog-Lucy
 
+0.24 15 Sept 2014
+ - fixes for Lucy 0.4.0
+
 0.23 22 July 2014
  - improve support for multi-value fields
 
