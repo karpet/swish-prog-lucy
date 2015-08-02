@@ -24,8 +24,10 @@ SWISH::Prog::Lucy - Swish3 Apache Lucy backend
  
  # then search the index
  my $searcher = SWISH::Prog::Lucy::Searcher->new(
-    invindex => 'path/to/index.swish',
-    config   => 'path/to/swish.conf',
+    invindex             => 'path/to/index.swish',
+    max_hits             => 1000,
+    find_relevant_fields => 1,   # default: 0
+    nfs_mode             => 1,   # default: 0
  );
  my $results = $searcher->search('my query')
  while ( my $result = $results->next ) {

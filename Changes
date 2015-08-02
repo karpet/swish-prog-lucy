@@ -1,5 +1,9 @@
 Revision history for SWISH-Prog-Lucy
 
+0.25 01 Aug 2015
+ - fix POD synopsis for Searcher in main SWISH::Prog::Lucy to match Searcher SYNOPSIS
+   (h/t https://rt.cpan.org/Ticket/Display.html?id=106189)
+
 0.24 15 Sept 2014
  - fixes for Lucy 0.4.0
 
