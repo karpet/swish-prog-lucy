@@ -20,9 +20,9 @@ requires 'Sys::Hostname'                => 0;
 
 perl_version '5.8.3';
 license 'http://dev.perl.org/licenses/';
-homepage 'http://dev.swish-e.org/wiki/perl';
+homepage 'https://github.com/karpet/swish-prog-lucy';
 bugtracker 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=SWISH-Prog-Lucy';
-repository 'http://svn.swish-e.org/perl/SWISH-Prog-Lucy/';
+repository 'https://github.com/karpet/swish-prog-lucy';
 
 install_script 'bin/lucyx-dump-terms';
 
